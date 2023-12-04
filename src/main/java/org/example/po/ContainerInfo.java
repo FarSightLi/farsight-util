@@ -8,9 +8,11 @@ import java.time.LocalDateTime;
 @Data
 public class ContainerInfo {
     private String containerName;
+    private String containerId;
+    private String ip;
     private double imageSize;
     private double cpuRate;
-    private double avgCpuUsage;
+    private String avgCpuUsage;
     private double maxCpuUsage;
     private int avgCpuState;
     private double maxCpuRate;

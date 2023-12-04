@@ -15,7 +15,6 @@ public class Main {
     static final Long KEEP_ALIVE_TIME = 1L;
 
 
-
     private AtomicInteger completedTasks = new AtomicInteger(0);
     private AtomicInteger startTasks = new AtomicInteger(0);
 
@@ -48,7 +47,7 @@ public class Main {
         List<CompletableFuture<Void>> futures = new ArrayList<>();
 
         commandMap.forEach((k, v) -> {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() ->{
+            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 try {
                     main.taskStarted();
                     System.out.println(k + JschUtil.exec(session, v, null, System.err));
@@ -57,7 +56,7 @@ public class Main {
                     System.err.println(k);
                     System.err.println(e.getMessage());
                 }
-            },executor);
+            }, executor);
             futures.add(future);
         });
         // 等待所有任务完成
@@ -116,8 +115,7 @@ public class Main {
     }
 
 
-
-    public void getSysInfo(Session session){
+    public void getSysInfo(Session session) {
 
     }
 }

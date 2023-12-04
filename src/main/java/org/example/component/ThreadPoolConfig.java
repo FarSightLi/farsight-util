@@ -5,7 +5,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
-public class ThreadPool {
+public class ThreadPoolConfig {
     static final ExecutorService SYS_POOL = new ThreadPoolExecutor(
             7,
             7,

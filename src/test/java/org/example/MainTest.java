@@ -2,16 +2,12 @@ package org.example;
 
 import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.Session;
-import org.example.component.SshSession;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.RepeatedTest;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -452,40 +448,5 @@ public class MainTest {
     }
 
 
-    @RepeatedTest(100)
-    public void ascTest(){
-        Main main = new Main();
-        HashMap<String, String> commandMap = main.getMap();
-        Session session = SshSession.getSession();
-
-        ExecutorService executor = main.getExecutor(8);
-
-        System.out.println("size:" + commandMap.size());
-        List<CompletableFuture<Void>> futures = new ArrayList<>();
-
-        commandMap.forEach((k, v) -> {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() ->{
-                try {
-                    main.taskStarted();
-                    System.out.println(k + JschUtil.exec(session, v, null, System.err));
-                    main.taskCompleted();
-                } catch (Exception e) {
-                    System.err.println(k);
-                    System.err.println(e.getMessage());
-                }
-            },executor);
-            futures.add(future);
-        });
-        // 等待所有任务完成
-        futures.forEach(CompletableFuture::join);
-
-        System.out.println("开始了" + main.getStartedTaskCount() + "个任务");
-        System.out.println("执行了" + main.getCompletedTaskCount() + "个任务");
-        // 检查已完成任务数是否等于预期任务数量
-        assert commandMap.size() == main.getCompletedTaskCount() : "有任务没执行,执行了" + main.getCompletedTaskCount() + "个任务";
-
-        // 线程池执行完毕，关闭
-        executor.shutdown();
-    }
 
 }
