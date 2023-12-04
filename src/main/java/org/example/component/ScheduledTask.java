@@ -37,8 +37,19 @@ public class ScheduledTask {
         log.info("所有主机采集完毕");
     }
 
+    @Scheduled(fixedDelay = 60 * 1000) //每分钟
     public void getSysIndexTask(){
-
+        List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
+        // 主机性能采集
+        ipList.forEach(ip -> {
+                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                        infoService.getSysIndex(SessionConfig.getSession(ip), ip);
+                    }, ThreadPoolConfig.getSys());
+                    sysFutures.add(future);
+                }
+        );
+        sysFutures.forEach(CompletableFuture::join);
+        log.info("所有主机性能采集完毕");
     }
 
     /**
