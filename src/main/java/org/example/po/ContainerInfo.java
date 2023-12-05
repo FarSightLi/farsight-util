@@ -1,8 +1,13 @@
 package org.example.po;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Data
@@ -10,37 +15,25 @@ public class ContainerInfo {
     private String containerName;
     private String containerId;
     private String ip;
-    private double imageSize;
+    private BigDecimal imageSize;
     private double cpuRate;
-    private String avgCpuUsage;
-    private double maxCpuUsage;
-    private int avgCpuState;
-    private double maxCpuRate;
-    private int maxCpuState;
     private double cpus;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime createTime;
 
-    private double memSize;
-    private double avgMemUsage;
-    private double maxMemUsage;
-    private double memUsedRate;
-    private int avgMemUsedState;
-    private double maxMemUsedRate;
-    private int maxMemUsedState;
-    private double diskSize;
-    private double avgDiskUsage;
-    private double maxDiskUsage;
-    private double diskUsedRate;
-    private int avgDiskUsedState;
-    private double maxDiskUsedRate;
-    private int maxDiskUsedState;
+    private BigDecimal memSize;
+    private BigDecimal memUsedRate;
+    private BigDecimal diskSize;
+    private BigDecimal diskUsedRate;
     private long onlineTime;
 
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
-    private LocalDateTime restartTime;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)    private LocalDateTime restartTime;
 
-    private int state;
+    private String state;
     private String version;
 }

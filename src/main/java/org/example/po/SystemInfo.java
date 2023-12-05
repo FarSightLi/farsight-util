@@ -2,6 +2,7 @@ package org.example.po;
 
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 
@@ -13,7 +14,7 @@ public class SystemInfo {
     private String ip;
     // 内核版本
     private String kernelRelease;
-    private String memSize;
+    private BigDecimal memSize;
     private String sysVersion;
 
 

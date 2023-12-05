@@ -37,6 +37,9 @@ public class ScheduledTask {
         log.info("所有主机采集完毕");
     }
 
+    /**
+     * 获得主机性能指标
+     */
     @Scheduled(fixedDelay = 60 * 1000) //每分钟
     public void getSysIndexTask(){
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
