@@ -115,7 +115,12 @@ public class InfoService {
             containerInfo.setRestartTime(getTime(onlineTime));
             String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
             containerInfo.setCreateTime(getTime(creatTime));
-            containerInfo.setOnlineTime(calculateDurationMillis(getTime(onlineTime)));
+            if ("running".equals(containerInfo.getState())) {
+                containerInfo.setOnlineTime(calculateDurationMillis(getTime(onlineTime)));
+            } else  {
+                containerInfo.setOnlineTime(0L);
+            }
+
         } catch (Exception e) {
             log.error(ip + "的" + containerInfo.getContainerName() + "信息出错了");
             log.error(e.getMessage());
