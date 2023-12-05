@@ -14,21 +14,23 @@ import java.time.LocalDateTime;
  * @author lilongsheng
  * @version 1.0
  * @project performance
- * @description 容器基本信息
+ * @description 容器性能指标
  * @date 2023/12/5 16:42:12
  */
 @Data
-public class ContainerInfo {
-    private String containerName;
+public class ContainerIndexInfo {
     private String containerId;
-    private String ip;
-    private BigDecimal imageSize;
-    private double cpus;
+    private double cpuRate;
 
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalDateTime createTime;
+    private LocalDateTime restartTime;
 
-    private String version;
+    private String state;
+    private BigDecimal memSize;
+    private BigDecimal memUsedRate;
+    private BigDecimal diskSize;
+    private BigDecimal diskUsedRate;
+    private long onlineTime;
 }

@@ -37,6 +37,26 @@ public class ScheduledTask {
         log.info("所有主机采集完毕");
     }
 
+    @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
+    public void getContainerInfoTask(){
+        if (InfoCache.CONTAINER_MAP.isEmpty()){
+            log.info("容器id列表暂未采集，开始采集主机信息");
+            getSysInfoTask();
+        }
+        // 容器信息采集
+        List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
+        InfoCache.CONTAINER_MAP.forEach((ip,idList) -> {
+            idList.forEach(id -> {
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    infoService.getContainerInfo(SessionConfig.getSession(ip), id, ip);
+                }, ThreadPoolConfig.getContainer());
+                containerFutures.add(future);
+            });
+        });
+        containerFutures.forEach(CompletableFuture::join);
+        log.info("所有容器采集完毕");
+    }
+
     /**
      * 获得主机性能指标
      */
@@ -60,7 +80,7 @@ public class ScheduledTask {
      *
      */
     @Scheduled(fixedDelay = 60 * 1000) //每分钟
-    public void getContainerInfoTask() {
+    public void getContainerIndexInfoTask() {
         if (InfoCache.CONTAINER_MAP.isEmpty()){
             log.info("容器id列表暂未采集，开始采集主机信息");
             getSysInfoTask();
@@ -70,7 +90,7 @@ public class ScheduledTask {
         InfoCache.CONTAINER_MAP.forEach((ip,idList) -> {
             idList.forEach(id -> {
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                    infoService.getContainerInfo(SessionConfig.getSession(ip), id, ip);
+                    infoService.getContainerIndexInfo(SessionConfig.getSession(ip), id, ip);
                 }, ThreadPoolConfig.getContainer());
                 containerFutures.add(future);
             });

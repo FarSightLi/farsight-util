@@ -7,10 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.example.component.InfoCache;
-import org.example.po.ContainerInfo;
-import org.example.po.DiskInfo;
-import org.example.po.SysTemChartInfo;
-import org.example.po.SystemInfo;
+import org.example.po.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -77,7 +74,6 @@ public class InfoService {
         try {
             String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
             HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
-            containerInfo.setState(detailsMap.get("State"));
             String names = detailsMap.get("Names");
             if (names.contains("_")) {
                 String[] split = names.split("_");
@@ -88,45 +84,63 @@ public class InfoService {
             }
             containerInfo.setIp(ip);
             containerInfo.setContainerId(containerId);
-            String diskSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
-            BigDecimal mbDiskSize = parseDataSize(diskSize);
-            containerInfo.setDiskSize(mbDiskSize);
-            String diskUsed = execCmd(session, String.format("docker system df -v | grep %s | awk '{print $5}'", containerId));
-            BigDecimal mbDiskUsed = parseDataSize(diskUsed);
-            if (mbDiskSize.compareTo(BigDecimal.ZERO) == 0) {
-                containerInfo.setDiskUsedRate(string2Decimal("0"));
-            } else {
-                containerInfo.setDiskUsedRate(mbDiskUsed.divide(mbDiskSize, 2, RoundingMode.HALF_UP));
-            }
             // 如果为0代表没有限制CPU
             String cpus = execCmd(session, String.format("docker inspect %s | grep -i nanocpus | awk '{print $2/1000000000}'", containerId));
             containerInfo.setCpus(Double.parseDouble(cpus));
-            String cpuRate = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $3} '", containerId));
-            containerInfo.setCpuRate(Double.parseDouble(getNum(cpuRate)));
-            String memSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $6} '", containerId));
-            BigDecimal mbMemSize = parseDataSize(memSize);
-            containerInfo.setMemSize(mbMemSize);
-            // 这里已经是百分比
-            String memUsed = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $7} '", containerId));
-            containerInfo.setMemUsedRate(string2Decimal(getNum(memUsed)));
             String imageSize = execCmd(session, String.format("docker images `docker system df -v | awk '/%s/ {print $2}'` | awk 'END{print $NF}'", containerId));
             containerInfo.setImageSize(parseDataSize(imageSize));
-            String onlineTime = execCmd(session, String.format("docker inspect --format '{{.State.StartedAt}}' %s", containerId));
-            containerInfo.setRestartTime(getTime(onlineTime));
             String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
             containerInfo.setCreateTime(getTime(creatTime));
-            if ("running".equals(containerInfo.getState())) {
-                containerInfo.setOnlineTime(calculateDurationMillis(getTime(onlineTime)));
-            } else  {
-                containerInfo.setOnlineTime(0L);
-            }
-
         } catch (Exception e) {
             log.error(ip + "的" + containerInfo.getContainerName() + "信息出错了");
             log.error(e.getMessage());
         }
         try {
             log.info(ip + " 的 " + containerInfo.getContainerName() + ":\n" + new ObjectMapper().writeValueAsString(containerInfo));
+        } catch (JsonProcessingException e) {
+            log.error("json解析出错---" + e.getMessage());
+        }
+    }
+
+    public void getContainerIndexInfo(Session session, String containerId, String ip){
+        ContainerIndexInfo containerIndexInfo = new ContainerIndexInfo();
+        containerIndexInfo.setContainerId(containerId);
+        try {
+            String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
+            HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
+            containerIndexInfo.setState(detailsMap.get("State"));
+            String diskSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
+            BigDecimal mbDiskSize = parseDataSize(diskSize);
+            containerIndexInfo.setDiskSize(mbDiskSize);
+            String diskUsed = execCmd(session, String.format("docker system df -v | grep %s | awk '{print $5}'", containerId));
+            BigDecimal mbDiskUsed = parseDataSize(diskUsed);
+            if (mbDiskSize.compareTo(BigDecimal.ZERO) == 0) {
+                containerIndexInfo.setDiskUsedRate(string2Decimal("0"));
+            } else {
+                containerIndexInfo.setDiskUsedRate(mbDiskUsed.divide(mbDiskSize, 2, RoundingMode.HALF_UP));
+            }
+            String cpuRate = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $3} '", containerId));
+            containerIndexInfo.setCpuRate(Double.parseDouble(removePercent(cpuRate)));
+            String memSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $6} '", containerId));
+            BigDecimal mbMemSize = parseDataSize(memSize);
+            containerIndexInfo.setMemSize(mbMemSize);
+            // 这里已经是百分比
+            String memUsed = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $7} '", containerId));
+            containerIndexInfo.setMemUsedRate(string2Decimal(removePercent(memUsed)));
+            String onlineTime = execCmd(session, String.format("docker inspect --format '{{.State.StartedAt}}' %s", containerId));
+            containerIndexInfo.setRestartTime(getTime(onlineTime));
+            String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
+            if ("running".equals(containerIndexInfo.getState())) {
+                containerIndexInfo.setOnlineTime(calculateDurationMillis(getTime(onlineTime)));
+            } else  {
+                containerIndexInfo.setOnlineTime(0L);
+            }
+        }catch (Exception e) {
+            log.error(ip + "的" + containerIndexInfo.getContainerId() + "信息出错了");
+            log.error(e.getMessage());
+        }
+        try {
+            log.info(ip + " 的 " + containerIndexInfo.getContainerId() + ":\n" + new ObjectMapper().writeValueAsString(containerIndexInfo));
         } catch (JsonProcessingException e) {
             log.error("json解析出错---" + e.getMessage());
         }
@@ -152,7 +166,7 @@ public class InfoService {
             String used = matcher1.group(2);
             String name = matcher1.group(3);
             String inodeUsed = matcher2.group(1);
-            diskDetail.setInodeUsedRate(string2Decimal(getNum(inodeUsed)));
+            diskDetail.setInodeUsedRate(string2Decimal(removePercent(inodeUsed)));
             diskDetail.setDfName(name);
             BigDecimal mbDiskSize = parseDataSize(size);
             diskDetail.setDfSize(mbDiskSize);
@@ -190,9 +204,8 @@ public class InfoService {
      * @param target
      * @return
      */
-    private String getNum(String target) {
-        String regEx = "[^0-9]";
-        return Pattern.compile(regEx).matcher(target).replaceAll("").trim();
+    private String removePercent(String target) {
+        return target.replace("%","").trim();
     }
 
     private LocalDateTime getTime(String stringTime) {
