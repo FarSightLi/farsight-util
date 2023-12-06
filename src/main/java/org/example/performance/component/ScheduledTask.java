@@ -53,13 +53,13 @@ public class ScheduledTask {
             });
         });
         containerFutures.forEach(CompletableFuture::join);
-        log.info("所有容器采集完毕");
+        log.info("所有容器基础信息采集完毕");
     }
 
     /**
      * 获得主机性能指标
      */
-    @Scheduled(fixedDelay = 60 * 1000) //每分钟
+    @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getSysIndexTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
         // 主机性能采集
@@ -77,7 +77,7 @@ public class ScheduledTask {
     /**
      * 获得容器信息
      */
-    @Scheduled(fixedDelay = 60 * 1000) //每分钟
+    @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
         if (InfoCache.CONTAINER_MAP.isEmpty()) {
             log.info("容器id列表暂未采集，开始采集主机信息");
@@ -94,7 +94,7 @@ public class ScheduledTask {
             });
         });
         containerFutures.forEach(CompletableFuture::join);
-        log.info("所有容器采集完毕");
+        log.info("所有容器性能指标采集完毕");
     }
 
 

@@ -15,9 +15,6 @@ public class Result<T> implements Serializable {
     //api 状态码
     private Integer code;
 
-    //状态码说明
-    private String codeRemark;
-
     //业务信息
     private String message;
 
@@ -25,10 +22,9 @@ public class Result<T> implements Serializable {
     private T result;
 
 
-    public Result(Integer code, String codeRemark, String message, T result) {
+    public Result(Integer code, String message, T result) {
 
         this.code = code;
-        this.codeRemark = codeRemark;
         this.message = message;
         this.result = result;
     }
@@ -36,14 +32,12 @@ public class Result<T> implements Serializable {
     private Result(CodeMsg codeMsg) {
         if (codeMsg != null) {
             this.code = codeMsg.getCode();
-            this.codeRemark = codeMsg.getCodeRemark();
         }
     }
 
     private Result(CodeMsg codeMsg, String message, T result) {
         if (codeMsg != null) {
             this.code = codeMsg.getCode();
-            this.codeRemark = codeMsg.getCodeRemark();
         }
         this.message = message;
         this.result = result;
@@ -99,13 +93,6 @@ public class Result<T> implements Serializable {
         this.code = code;
     }
 
-    public String getCodeRemark() {
-        return codeRemark;
-    }
-
-    public void setCodeRemark(String codeRemark) {
-        this.codeRemark = codeRemark;
-    }
 
     public String getMessage() {
         return message;
