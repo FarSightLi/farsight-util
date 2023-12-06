@@ -1,8 +1,11 @@
 package org.example.performance.component;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.config.SessionConfig;
+import org.example.performance.config.ThreadPoolConfig;
 import org.example.performance.service.InfoService;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -21,6 +24,7 @@ public class ScheduledTask {
     /**
      * 获得主机信息
      */
+    @Async
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getSysInfoTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
@@ -36,6 +40,7 @@ public class ScheduledTask {
         log.info("所有主机采集完毕");
     }
 
+    @Async
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getContainerInfoTask() {
         if (InfoCache.CONTAINER_MAP.isEmpty()) {
@@ -59,6 +64,7 @@ public class ScheduledTask {
     /**
      * 获得主机性能指标
      */
+    @Async
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getSysIndexTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
@@ -77,6 +83,7 @@ public class ScheduledTask {
     /**
      * 获得容器信息
      */
+    @Async
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
         if (InfoCache.CONTAINER_MAP.isEmpty()) {

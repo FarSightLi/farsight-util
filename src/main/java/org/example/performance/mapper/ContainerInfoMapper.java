@@ -1,7 +1,8 @@
 package org.example.performance.mapper;
 
-import org.example.performance.pojo.po.ContainerInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.example.performance.pojo.po.ContainerInfo;
 
 /**
 * @author bonree
@@ -9,6 +10,7 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2023-12-06 14:14:04
 * @Entity org.example.performance.po.ContainerInfo
 */
+@Mapper
 public interface ContainerInfoMapper extends BaseMapper<ContainerInfo> {
 
 }

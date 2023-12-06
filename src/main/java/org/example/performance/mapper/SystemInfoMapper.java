@@ -1,7 +1,8 @@
 package org.example.performance.mapper;
 
-import org.example.performance.pojo.po.SystemInfo;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import org.apache.ibatis.annotations.Mapper;
+import org.example.performance.pojo.po.SystemInfo;
 
 /**
 * @author bonree
@@ -9,6 +10,8 @@ import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 * @createDate 2023-12-06 14:14:04
 * @Entity org.example.performance.po.SystemInfo
 */
+@Mapper
+
 public interface SystemInfoMapper extends BaseMapper<SystemInfo> {
 
 }
