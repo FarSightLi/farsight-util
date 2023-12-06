@@ -1,4 +1,4 @@
-package org.example.performance.component;
+package org.example.performance.test;
 
 import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.Session;

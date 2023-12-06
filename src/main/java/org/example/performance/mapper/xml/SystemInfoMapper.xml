@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.performance.mapper.SystemInfoMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.SystemInfo">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="cpuArch" column="cpu_arch" jdbcType="VARCHAR"/>
+            <result property="cpuCores" column="cpu_cores" jdbcType="INTEGER"/>
+            <result property="diskInfo" column="disk_info" jdbcType="INTEGER"/>
+            <result property="ip" column="ip" jdbcType="VARCHAR"/>
+            <result property="kernelRelease" column="kernel_release" jdbcType="VARCHAR"/>
+            <result property="memSize" column="mem_size" jdbcType="DECIMAL"/>
+            <result property="sysVersion" column="sys_version" jdbcType="VARCHAR"/>
+            <result property="updateTime" column="update_time" jdbcType="TIME"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,cpu_arch,cpu_cores,
+        disk_info,ip,kernel_release,
+        mem_size,sys_version,update_time
+    </sql>
+</mapper>

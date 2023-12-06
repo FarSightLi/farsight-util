@@ -1,4 +1,4 @@
-package org.example.performance.po;
+package org.example.performance.pojo.vo;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
@@ -18,7 +18,7 @@ import java.time.LocalDateTime;
  * @date 2023/12/5 16:42:12
  */
 @Data
-public class ContainerInfo {
+public class ContainerInfoVO {
     private String containerName;
     private String containerId;
     private String ip;

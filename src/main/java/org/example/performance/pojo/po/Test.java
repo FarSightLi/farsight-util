@@ -1,4 +1,4 @@
-package org.example.performance.po;
+package org.example.performance.pojo.po;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;

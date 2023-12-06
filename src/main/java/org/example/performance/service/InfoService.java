@@ -7,7 +7,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.InfoCache;
-import org.example.performance.po.*;
+import org.example.performance.pojo.bo.DiskInfoBO;
+import org.example.performance.pojo.po.ContainerIndexInfo;
+import org.example.performance.pojo.po.ContainerInfo;
+import org.example.performance.pojo.po.SysTemChartInfo;
+import org.example.performance.pojo.po.SystemInfo;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -39,7 +43,7 @@ public class InfoService {
         InfoCache.CONTAINER_MAP.put(ip, containerIds);
         String diskInfo = execCmd(session, "df -h | awk '$NF == \"/\" || $NF ~ /^\\/[^\\/]+$/ {print $2,$3,$6}'");
         String diskInodeInfo = execCmd(session, "df -h -i | awk '$NF == \"/\" || $NF ~ /^\\/[^\\/]+$/ {print $5,$6}'");
-        systemInfo.setDiskInfo(getDiskInfo(diskInfo, diskInodeInfo));
+//        systemInfo.setDiskInfo(getDiskInfo(diskInfo, diskInodeInfo));
         ObjectMapper objectMapper = new ObjectMapper();
         try {
             log.info(ip + " 主机信息采集完毕:\n" + objectMapper.writeValueAsString(systemInfo));
@@ -58,8 +62,8 @@ public class InfoService {
         sysTemChartInfo.setByteOut(parseDataSize(execCmd(session, "cat /proc/net/dev | grep ens | awk '{print $10} '")));
         sysTemChartInfo.setIo(string2Decimal(execCmd(session, "iostat -x | awk '/%util/ {getline; print $NF}'")));
         sysTemChartInfo.setCpu(string2Decimal(execCmd(session, "tsar --cpu -C -s util |  awk -F= '{print $2}'")));
-        sysTemChartInfo.setDisk(execCmd(session, "df -h | awk '$NF == \"/\" {print $5}'"));
-        sysTemChartInfo.setInode(execCmd(session, "df -h -i| awk '$NF == \"/\" {print $5}'"));
+        sysTemChartInfo.setDisk(string2Decimal(removePercent(execCmd(session, "df -h | awk '$NF == \"/\" {print $5}'"))));
+        sysTemChartInfo.setInode(string2Decimal(removePercent(execCmd(session, "df -h -i| awk '$NF == \"/\" {print $5}'"))));
         sysTemChartInfo.setTcp(string2Decimal(execCmd(session, "netstat -nat | grep tcp | wc -l")));
         try {
             log.info(ip + "性能指标：\n" + new ObjectMapper().writeValueAsString(sysTemChartInfo));
@@ -82,11 +86,11 @@ public class InfoService {
             } else {
                 log.error("容器名称不符合规范");
             }
-            containerInfo.setIp(ip);
+//            containerInfo.setIp(ip);
             containerInfo.setContainerId(containerId);
             // 如果为0代表没有限制CPU
             String cpus = execCmd(session, String.format("docker inspect %s | grep -i nanocpus | awk '{print $2/1000000000}'", containerId));
-            containerInfo.setCpus(Double.parseDouble(cpus));
+            containerInfo.setCpus(string2Decimal(cpus));
             String imageSize = execCmd(session, String.format("docker images `docker system df -v | awk '/%s/ {print $2}'` | awk 'END{print $NF}'", containerId));
             containerInfo.setImageSize(parseDataSize(imageSize));
             String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
@@ -107,8 +111,8 @@ public class InfoService {
         containerIndexInfo.setContainerId(containerId);
         try {
             String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
-            HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
-            containerIndexInfo.setState(detailsMap.get("State"));
+            HashMap detailsMap = new ObjectMapper().readValue(details, HashMap.class);
+//            containerIndexInfo.setState(detailsMap.get("State"));
             String diskSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
             BigDecimal mbDiskSize = parseDataSize(diskSize);
             containerIndexInfo.setDiskSize(mbDiskSize);
@@ -150,18 +154,18 @@ public class InfoService {
         return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8, System.err).trim();
     }
 
-    private DiskInfo getDiskInfo(String strInfo, String diskInodeInfo) {
+    private DiskInfoBO getDiskInfo(String strInfo, String diskInodeInfo) {
         Pattern pattern1 = Pattern.compile("(\\S+)\\s+(\\S+)\\s+(\\S+)");
         Pattern pattern2 = Pattern.compile("(\\S+)\\s+(\\S+)");
         Matcher matcher1 = pattern1.matcher(strInfo);
         Matcher matcher2 = pattern2.matcher(diskInodeInfo);
-        DiskInfo diskInfo = new DiskInfo();
-        List<DiskInfo.DiskDetail> diskDetailList = new ArrayList<>();
+        DiskInfoBO DiskInfoBO = new DiskInfoBO();
+        List<DiskInfoBO.DiskDetail> diskDetailList = new ArrayList<>();
         BigDecimal totalSize = string2Decimal("0");
         BigDecimal usedRate = string2Decimal("0");
         BigDecimal usedSize = string2Decimal("0");
         while (matcher1.find() && matcher2.find()) {
-            DiskInfo.DiskDetail diskDetail = new DiskInfo.DiskDetail();
+            DiskInfoBO.DiskDetail diskDetail = new DiskInfoBO.DiskDetail();
             String size = matcher1.group(1);
             String used = matcher1.group(2);
             String name = matcher1.group(3);
@@ -186,11 +190,11 @@ public class InfoService {
         } else {
             usedRate = usedSize.divide(totalSize, RoundingMode.HALF_UP);
         }
-        diskInfo.setPartitions(diskDetailList);
-        diskInfo.setUsedRate(usedRate);
-        diskInfo.setTotalSize(totalSize);
-        diskInfo.setUsedSize(usedSize);
-        return diskInfo;
+        DiskInfoBO.setPartitions(diskDetailList);
+        DiskInfoBO.setUsedRate(usedRate);
+        DiskInfoBO.setTotalSize(totalSize);
+        DiskInfoBO.setUsedSize(usedSize);
+        return DiskInfoBO;
     }
 
     private BigDecimal string2Decimal(String value) {
@@ -199,7 +203,7 @@ public class InfoService {
     }
 
     /**
-     * 提取数字部分
+     * 移除百分号
      *
      * @param target
      * @return

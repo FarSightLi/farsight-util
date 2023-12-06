@@ -1,4 +1,4 @@
-package org.example.performance.po;
+package org.example.performance.pojo.po;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;

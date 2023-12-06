@@ -1,7 +1,7 @@
 package org.example.performance.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import org.example.performance.po.Test;
+import org.example.performance.pojo.po.Test;
 import org.example.performance.service.TestService;
 import org.example.performance.util.Result;
 import org.springframework.web.bind.annotation.RequestMapping;

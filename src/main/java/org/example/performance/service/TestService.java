@@ -1,7 +1,7 @@
 package org.example.performance.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
-import org.example.performance.po.Test;
+import org.example.performance.pojo.po.Test;
 
 /**
  * @author bonree

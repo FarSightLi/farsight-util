@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.performance.mapper.DiskInfoMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.DiskInfo">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="dfName" column="df_name" jdbcType="VARCHAR"/>
+            <result property="dfSize" column="df_size" jdbcType="DECIMAL"/>
+            <result property="diskUsedSize" column="disk_used_size" jdbcType="DECIMAL"/>
+            <result property="inodeUsedRate" column="inode_used_rate" jdbcType="DECIMAL"/>
+            <result property="ioRate" column="io_rate" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,df_name,df_size,
+        disk_used_size,inode_used_rate,io_rate
+    </sql>
+</mapper>

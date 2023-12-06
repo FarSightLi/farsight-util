@@ -2,7 +2,7 @@ package org.example.performance.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import org.example.performance.po.Test;
+import org.example.performance.pojo.po.Test;
 
 /**
  * @author bonree

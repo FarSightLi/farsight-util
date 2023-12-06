@@ -2,7 +2,7 @@ package org.example.performance.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.example.performance.mapper.TestMapper;
-import org.example.performance.po.Test;
+import org.example.performance.pojo.po.Test;
 import org.example.performance.service.TestService;
 import org.springframework.stereotype.Service;
 

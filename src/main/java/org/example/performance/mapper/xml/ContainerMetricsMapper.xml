@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.performance.mapper.ContainerMetricsMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.ContainerMetrics">
+            <id property="id" column="id" jdbcType="INTEGER"/>
+            <result property="containerId" column="container_id" jdbcType="VARCHAR"/>
+            <result property="cpuRate" column="cpu_rate" jdbcType="DOUBLE"/>
+            <result property="restartTime" column="restart_time" jdbcType="TIMESTAMP"/>
+            <result property="state" column="state" jdbcType="VARCHAR"/>
+            <result property="memUsedSize" column="mem_used_size" jdbcType="DECIMAL"/>
+            <result property="diskUsedSize" column="disk_used_size" jdbcType="DECIMAL"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,container_id,cpu_rate,
+        restart_time,state,mem_used_size,
+        disk_used_size
+    </sql>
+</mapper>
