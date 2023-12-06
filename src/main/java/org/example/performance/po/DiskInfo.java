@@ -1,4 +1,4 @@
-package org.example.po;
+package org.example.performance.po;
 
 import lombok.Data;
 

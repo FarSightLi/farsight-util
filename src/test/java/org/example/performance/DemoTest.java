@@ -1,6 +1,6 @@
-package org.example;
+package org.example.performance;
 
-import org.example.component.ScheduledTask;
+import org.example.performance.component.ScheduledTask;
 import org.junit.jupiter.api.RepeatedTest;
 
 public class DemoTest {

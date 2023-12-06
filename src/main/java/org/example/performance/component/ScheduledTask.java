@@ -1,8 +1,7 @@
-package org.example.component;
+package org.example.performance.component;
 
 import lombok.extern.slf4j.Slf4j;
-import org.example.service.InfoService;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.example.performance.service.InfoService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -23,7 +22,7 @@ public class ScheduledTask {
      * 获得主机信息
      */
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
-    public void getSysInfoTask(){
+    public void getSysInfoTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
         // 主机信息采集
         ipList.forEach(ip -> {
@@ -38,14 +37,14 @@ public class ScheduledTask {
     }
 
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
-    public void getContainerInfoTask(){
-        if (InfoCache.CONTAINER_MAP.isEmpty()){
+    public void getContainerInfoTask() {
+        if (InfoCache.CONTAINER_MAP.isEmpty()) {
             log.info("容器id列表暂未采集，开始采集主机信息");
             getSysInfoTask();
         }
         // 容器信息采集
         List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
-        InfoCache.CONTAINER_MAP.forEach((ip,idList) -> {
+        InfoCache.CONTAINER_MAP.forEach((ip, idList) -> {
             idList.forEach(id -> {
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     infoService.getContainerInfo(SessionConfig.getSession(ip), id, ip);
@@ -61,7 +60,7 @@ public class ScheduledTask {
      * 获得主机性能指标
      */
     @Scheduled(fixedDelay = 60 * 1000) //每分钟
-    public void getSysIndexTask(){
+    public void getSysIndexTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
         // 主机性能采集
         ipList.forEach(ip -> {
@@ -77,17 +76,16 @@ public class ScheduledTask {
 
     /**
      * 获得容器信息
-     *
      */
     @Scheduled(fixedDelay = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
-        if (InfoCache.CONTAINER_MAP.isEmpty()){
+        if (InfoCache.CONTAINER_MAP.isEmpty()) {
             log.info("容器id列表暂未采集，开始采集主机信息");
             getSysInfoTask();
         }
         // 容器信息采集
         List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
-        InfoCache.CONTAINER_MAP.forEach((ip,idList) -> {
+        InfoCache.CONTAINER_MAP.forEach((ip, idList) -> {
             idList.forEach(id -> {
                 CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                     infoService.getContainerIndexInfo(SessionConfig.getSession(ip), id, ip);

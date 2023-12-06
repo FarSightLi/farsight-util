@@ -1,4 +1,4 @@
-package org.example.service;
+package org.example.performance.service;
 
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.extra.ssh.JschUtil;
@@ -6,8 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
-import org.example.component.InfoCache;
-import org.example.po.*;
+import org.example.performance.component.InfoCache;
+import org.example.performance.po.*;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -102,7 +102,7 @@ public class InfoService {
         }
     }
 
-    public void getContainerIndexInfo(Session session, String containerId, String ip){
+    public void getContainerIndexInfo(Session session, String containerId, String ip) {
         ContainerIndexInfo containerIndexInfo = new ContainerIndexInfo();
         containerIndexInfo.setContainerId(containerId);
         try {
@@ -132,10 +132,10 @@ public class InfoService {
             String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
             if ("running".equals(containerIndexInfo.getState())) {
                 containerIndexInfo.setOnlineTime(calculateDurationMillis(getTime(onlineTime)));
-            } else  {
+            } else {
                 containerIndexInfo.setOnlineTime(0L);
             }
-        }catch (Exception e) {
+        } catch (Exception e) {
             log.error(ip + "的" + containerIndexInfo.getContainerId() + "信息出错了");
             log.error(e.getMessage());
         }
@@ -205,7 +205,7 @@ public class InfoService {
      * @return
      */
     private String removePercent(String target) {
-        return target.replace("%","").trim();
+        return target.replace("%", "").trim();
     }
 
     private LocalDateTime getTime(String stringTime) {

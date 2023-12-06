@@ -1,9 +1,8 @@
-package org.example.po;
+package org.example.performance.po;
 
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 
 @Data
@@ -16,7 +15,6 @@ public class SystemInfo {
     private String kernelRelease;
     private BigDecimal memSize;
     private String sysVersion;
-
 
 
 }

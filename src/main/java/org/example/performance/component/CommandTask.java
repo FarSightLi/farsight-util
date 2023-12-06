@@ -1,10 +1,7 @@
-package org.example;
+package org.example.performance.component;
 
 import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.Session;
-
-import java.util.HashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class CommandTask implements Runnable {
     private final String command;
@@ -14,7 +11,7 @@ public class CommandTask implements Runnable {
     private Main main;
 
 
-    public CommandTask(String info, String command,Session session,Main main) {
+    public CommandTask(String info, String command, Session session, Main main) {
         this.command = command;
         this.info = info;
         this.session = session;
@@ -26,7 +23,7 @@ public class CommandTask implements Runnable {
         try {
             main.taskStarted();
             System.out.println(info + JschUtil.exec(session, command, null, System.err));
-            System.out.println(info+"完毕");
+            System.out.println(info + "完毕");
             // 在任务完成时调用 Main 类的 taskCompleted 方法
             main.taskCompleted();
         } catch (Exception e) {

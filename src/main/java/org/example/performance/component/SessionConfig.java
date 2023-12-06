@@ -1,4 +1,4 @@
-package org.example.component;
+package org.example.performance.component;
 
 import cn.hutool.core.lang.SimpleCache;
 import cn.hutool.extra.ssh.JschUtil;

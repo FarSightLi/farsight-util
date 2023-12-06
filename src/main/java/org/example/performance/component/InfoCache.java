@@ -1,6 +1,4 @@
-package org.example.component;
-
-import cn.hutool.core.lang.SimpleCache;
+package org.example.performance.component;
 
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;

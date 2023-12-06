@@ -1,2 +1,21 @@
 ipList:
   192.168.1.167,192.168.32.128
+
+jwt:
+  tokenHeader: X-Token #JWT存储的请求头
+  tokenHead: Bearer  #令牌前缀
+  secret: pKRpxJKnd5Aj0FCZ8g9q7nZO+BVx1pceq/kbv+wvHaGmePjA9CWB6GQIZ+84EK7ErKwnlrKNmHV/WTnoQiFXmA== #JWT加解密使用的密钥
+  expiration: 604800 #JWT的超期限时间秒(60*60*24)
+
+spring:
+  datasource:
+    url: jdbc:mysql://192.168.1.167:3316/performance?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  mapper-locations: classpath:com/example/performance/mapper/xml/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

@@ -1,4 +1,4 @@
-package org.example.component;
+package org.example.performance.component;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.ExecutorService;
