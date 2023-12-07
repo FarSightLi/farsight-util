@@ -2,7 +2,10 @@ package org.example.performance.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
-import org.example.performance.pojo.po.SystemInfo;
+import org.apache.ibatis.annotations.Param;
+import org.example.performance.pojo.po.HostInfo;
+
+import java.util.List;
 
 /**
 * @author bonree
@@ -12,8 +15,8 @@ import org.example.performance.pojo.po.SystemInfo;
 */
 @Mapper
 
-public interface SystemInfoMapper extends BaseMapper<SystemInfo> {
-
+public interface HostInfoMapper extends BaseMapper<HostInfo> {
+    int updateOrInsertBatch(@Param("hostInfoCollection") List<HostInfo> hostInfoCollection);
 }
 
 

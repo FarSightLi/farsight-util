@@ -30,7 +30,6 @@ public class TestController {
 
     @RequestMapping("/testDB")
     public Result<List<Test>> testDB() {
-//        return Result.success(testMapper.selectList(new QueryWrapper<>()));
         return Result.success(testService.list(new QueryWrapper<>()));
     }
 }

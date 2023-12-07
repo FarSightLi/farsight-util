@@ -1,9 +1,6 @@
 package org.example.performance.pojo.po;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -14,13 +11,13 @@ import lombok.Data;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 
 /**
  * 容器性能表
+ *
  * @TableName container_metrics
  */
-@TableName(value ="container_metrics")
+@TableName(value = "container_metrics")
 @Data
 public class ContainerMetrics implements Serializable {
     /**
@@ -42,6 +39,9 @@ public class ContainerMetrics implements Serializable {
     /**
      * 重启时间
      */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime restartTime;
 
     /**
@@ -65,7 +65,8 @@ public class ContainerMetrics implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalTime updateTime;
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

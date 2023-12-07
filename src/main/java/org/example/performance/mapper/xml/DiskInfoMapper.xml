@@ -11,10 +11,21 @@
             <result property="diskUsedSize" column="disk_used_size" jdbcType="DECIMAL"/>
             <result property="inodeUsedRate" column="inode_used_rate" jdbcType="DECIMAL"/>
             <result property="ioRate" column="io_rate" jdbcType="DECIMAL"/>
+        <result property="updateTime" column="update_time" jdbcType="TIME"/>
     </resultMap>
 
     <sql id="Base_Column_List">
         id,df_name,df_size,
-        disk_used_size,inode_used_rate,io_rate
+        disk_used_size,inode_used_rate,io_rate,update_time
     </sql>
+    <insert id="insertBatch">
+        insert into disk_info(df_name,df_size,
+        disk_used_size,inode_used_rate,io_rate,update_time,host_id)
+        values
+        <foreach collection="diskInfoList" item="item" separator=",">
+            (#{item.dfName,jdbcType=VARCHAR},#{item.dfSize,jdbcType=DECIMAL},
+            #{item.diskUsedSize,jdbcType=DECIMAL},#{item.inodeUsedRate,jdbcType=DECIMAL},#{item.ioRate,jdbcType=DECIMAL},
+            #{item.updateTime},#{item.hostId,jdbcType=NUMERIC})
+        </foreach>
+    </insert>
 </mapper>

@@ -5,16 +5,17 @@
 <mapper namespace="org.example.performance.mapper.ContainerInfoMapper">
 
     <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.ContainerInfo">
-            <id property="id" column="id" jdbcType="INTEGER"/>
-            <result property="containerName" column="container_name" jdbcType="VARCHAR"/>
-            <result property="containerId" column="container_id" jdbcType="VARCHAR"/>
-            <result property="hostId" column="host_id" jdbcType="INTEGER"/>
-            <result property="imageSize" column="image_size" jdbcType="DECIMAL"/>
-            <result property="cpus" column="cpus" jdbcType="DECIMAL"/>
-            <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
-            <result property="version" column="version" jdbcType="VARCHAR"/>
-            <result property="memSize" column="mem_size" jdbcType="DECIMAL"/>
-            <result property="diskSize" column="disk_size" jdbcType="DECIMAL"/>
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="containerName" column="container_name" jdbcType="VARCHAR"/>
+        <result property="containerId" column="container_id" jdbcType="VARCHAR"/>
+        <result property="hostId" column="host_id" jdbcType="INTEGER"/>
+        <result property="imageSize" column="image_size" jdbcType="DECIMAL"/>
+        <result property="cpus" column="cpus" jdbcType="DECIMAL"/>
+        <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
+        <result property="version" column="version" jdbcType="VARCHAR"/>
+        <result property="memSize" column="mem_size" jdbcType="DECIMAL"/>
+        <result property="diskSize" column="disk_size" jdbcType="DECIMAL"/>
+        <result property="updateTime" column="update_time" jdbcType="TIME"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -23,4 +24,35 @@
         create_time,version,mem_size,
         disk_size
     </sql>
+    <insert id="updateOrInsertBatch">
+        insert into container_info(container_name, container_id, host_id, image_size, cpus, create_time, version,
+        mem_size, disk_size, update_time)
+        values
+        <foreach collection="containerInfoCollection" item="item" separator=",">
+            (
+            #{item.containerName, jdbcType=VARCHAR},
+            #{item.containerId, jdbcType=VARCHAR},
+            #{item.hostId, jdbcType=NUMERIC},
+            #{item.imageSize, jdbcType=DECIMAL},
+            #{item.cpus, jdbcType=DECIMAL},
+            #{item.createTime},
+            #{item.version, jdbcType=VARCHAR},
+            #{item.memSize, jdbcType=DECIMAL},
+            #{item.diskSize, jdbcType=DECIMAL},
+            #{item.updateTime}
+            )
+        </foreach>
+        ON DUPLICATE KEY UPDATE
+        container_name = CASE WHEN VALUES(container_name) IS NOT NULL THEN VALUES(container_name) ELSE container_name
+        END,
+        host_id = CASE WHEN VALUES(host_id) IS NOT NULL THEN VALUES(host_id) ELSE host_id END,
+        image_size = CASE WHEN VALUES(image_size) IS NOT NULL THEN VALUES(image_size) ELSE image_size END,
+        cpus = CASE WHEN VALUES(cpus) IS NOT NULL THEN VALUES(cpus) ELSE cpus END,
+        create_time = CASE WHEN VALUES(create_time) IS NOT NULL THEN VALUES(create_time) ELSE create_time END,
+        version = CASE WHEN VALUES(version) IS NOT NULL THEN VALUES(version) ELSE version END,
+        mem_size = CASE WHEN VALUES(mem_size) IS NOT NULL THEN VALUES(mem_size) ELSE mem_size END,
+        disk_size = CASE WHEN VALUES(disk_size) IS NOT NULL THEN VALUES(disk_size) ELSE disk_size END,
+        update_time = CASE WHEN VALUES(update_time) IS NOT NULL THEN VALUES(update_time) ELSE update_time END;
+    </insert>
+
 </mapper>

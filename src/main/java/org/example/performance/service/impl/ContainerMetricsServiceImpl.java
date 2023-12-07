@@ -1,10 +1,13 @@
 package org.example.performance.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.example.performance.mapper.ContainerMetricsMapper;
 import org.example.performance.pojo.po.ContainerMetrics;
 import org.example.performance.service.ContainerMetricsService;
-import org.example.performance.mapper.ContainerMetricsMapper;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
 * @author bonree
@@ -15,6 +18,11 @@ import org.springframework.stereotype.Service;
 public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMapper, ContainerMetrics>
     implements ContainerMetricsService{
 
+    @Override
+    public void insertBatch(List<ContainerMetrics> containerMetricsList) {
+        containerMetricsList.forEach(containerMetrics -> containerMetrics.setUpdateTime(LocalDateTime.now()));
+        baseMapper.insertBatch(containerMetricsList);
+    }
 }
 
 

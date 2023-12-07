@@ -5,15 +5,16 @@ public enum CodeMsg {
     SUCCESS(0, "操作成功"),
     TOKEN_ERROR(5000, "Token错误"),
     SYSTEM_ERROR(10001, "系统错误"),
+    DATABASE_ERROR(10002, "数据库错误"),
     PARAMETER_ERROR(10008, "参数错误，请参考API文档");
 
     private int code;
     private String codeRemark;
 
-    private CodeMsg() {
+    CodeMsg() {
     }
 
-    private CodeMsg(int code, String codeRemark) {
+    CodeMsg(int code, String codeRemark) {
         this.code = code;
         this.codeRemark = codeRemark;
     }

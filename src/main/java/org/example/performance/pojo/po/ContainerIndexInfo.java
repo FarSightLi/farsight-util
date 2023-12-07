@@ -1,5 +1,7 @@
 package org.example.performance.pojo.po;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -33,4 +35,13 @@ public class ContainerIndexInfo {
     private BigDecimal diskSize;
     private BigDecimal diskUsedRate;
     private long onlineTime;
+
+    /**
+     * 更新时间
+     */
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
 }

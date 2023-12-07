@@ -15,7 +15,7 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
 
 mybatis-plus:
-  mapper-locations: classpath:com/example/performance/mapper/xml/*.xml
+  mapper-locations: classpath:org/example/performance/mapper/xml/*.xml
   configuration:
     map-underscore-to-camel-case: true
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

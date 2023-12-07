@@ -1,9 +1,6 @@
 package org.example.performance.pojo.po;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -13,15 +10,17 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 系统信息表
- * @TableName system_info
+ *
+ * @TableName host_info
  */
-@TableName(value ="system_info")
+@TableName(value = "host_info")
 @Data
-public class SystemInfo implements Serializable {
+public class HostInfo implements Serializable {
     /**
      * ID
      */
@@ -37,11 +36,6 @@ public class SystemInfo implements Serializable {
      * CPU核数
      */
     private Integer cpuCores;
-
-    /**
-     * 磁盘信息id
-     */
-    private Integer diskInfo;
 
     /**
      * IP地址
@@ -69,7 +63,11 @@ public class SystemInfo implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalTime updateTime;
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
+
+    @TableField(exist = false)
+    private List<String> containerIdList;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

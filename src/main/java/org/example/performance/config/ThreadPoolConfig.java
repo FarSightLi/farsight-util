@@ -6,16 +6,19 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ThreadPoolConfig {
+    private ThreadPoolConfig() {
+
+    }
     static final ExecutorService SYS_POOL = new ThreadPoolExecutor(
-            7,
-            7,
+            5,
+            5,
             1,
             TimeUnit.MINUTES,
             new ArrayBlockingQueue<>(100),
             new ThreadPoolExecutor.CallerRunsPolicy());
     static final ExecutorService CONTAINER_POOL = new ThreadPoolExecutor(
-            7,
-            7,
+            5,
+            5,
             1,
             TimeUnit.MINUTES,
             new ArrayBlockingQueue<>(100),

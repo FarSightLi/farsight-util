@@ -19,4 +19,15 @@
         restart_time,state,mem_used_size,
         disk_used_size
     </sql>
+    <insert id="insertBatch">
+        insert into container_metrics(id,container_id,cpu_rate,
+        restart_time,state,mem_used_size,
+        disk_used_size,update_time)
+        values
+        <foreach collection="containerMetricsCollection" item="item" separator=",">
+            (#{item.id,jdbcType=NUMERIC},#{item.containerId,jdbcType=VARCHAR},#{item.cpuRate,jdbcType=DECIMAL},
+            #{item.restartTime},#{item.state,jdbcType=VARCHAR},#{item.memUsedSize,jdbcType=DECIMAL},
+            #{item.diskUsedSize,jdbcType=DECIMAL},#{item.updateTime})
+        </foreach>
+    </insert>
 </mapper>

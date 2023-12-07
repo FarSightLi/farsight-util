@@ -25,4 +25,19 @@
         disk,tcp,mem_rate,
         io,inode,byte_out
     </sql>
+    <insert id="insertBatch">
+        insert into host_metrics(id,host_id,
+        mem,byte_in,host_load,
+        cpu,disk,tcp,
+        mem_rate,io,inode,
+        byte_out,update_time)
+        values
+        <foreach collection="hostMetricsCollection" item="item" separator=",">
+            (#{item.id,jdbcType=NUMERIC},#{item.hostId,jdbcType=NUMERIC},
+            #{item.mem,jdbcType=DECIMAL},#{item.byteIn,jdbcType=DECIMAL},#{item.hostLoad,jdbcType=DECIMAL},
+            #{item.cpu,jdbcType=DECIMAL},#{item.disk,jdbcType=DECIMAL},#{item.tcp,jdbcType=DECIMAL},
+            #{item.memRate,jdbcType=DECIMAL},#{item.io,jdbcType=DECIMAL},#{item.inode,jdbcType=DECIMAL},
+            #{item.byteOut,jdbcType=DECIMAL},#{item.updateTime})
+        </foreach>
+    </insert>
 </mapper>

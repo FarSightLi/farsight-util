@@ -1,7 +1,9 @@
 package org.example.performance.service;
 
-import org.example.performance.pojo.po.DiskInfo;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.example.performance.pojo.po.DiskInfo;
+
+import java.util.List;
 
 /**
 * @author bonree
@@ -9,5 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 * @createDate 2023-12-06 14:14:04
 */
 public interface DiskInfoService extends IService<DiskInfo> {
+    void saveDiskInfo(List<DiskInfo> diskInfoList);
 
 }

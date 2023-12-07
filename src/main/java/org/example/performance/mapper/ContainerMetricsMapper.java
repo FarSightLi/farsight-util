@@ -2,7 +2,10 @@ package org.example.performance.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.example.performance.pojo.po.ContainerMetrics;
+
+import java.util.Collection;
 
 /**
 * @author bonree
@@ -12,7 +15,7 @@ import org.example.performance.pojo.po.ContainerMetrics;
 */
 @Mapper
 public interface ContainerMetricsMapper extends BaseMapper<ContainerMetrics> {
-
+    int insertBatch(@Param("containerMetricsCollection") Collection<ContainerMetrics> containerMetricsCollection);
 }
 
 

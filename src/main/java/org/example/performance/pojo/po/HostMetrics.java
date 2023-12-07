@@ -1,9 +1,6 @@
 package org.example.performance.pojo.po;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -13,13 +10,15 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.time.LocalTime;
+import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 主机指标表
+ *
  * @TableName host_metrics
  */
-@TableName(value ="host_metrics")
+@TableName(value = "host_metrics")
 @Data
 public class HostMetrics implements Serializable {
     /**
@@ -32,6 +31,18 @@ public class HostMetrics implements Serializable {
      * 主机ID
      */
     private Integer hostId;
+
+    /**
+     * 主机Ip
+     */
+    @TableField(exist = false)
+    private String hostIp;
+
+    /**
+     * 磁盘信息
+     */
+    @TableField(exist = false)
+    private List<DiskInfo> diskInfoList;
 
     /**
      * 主机内存使用量
@@ -89,7 +100,9 @@ public class HostMetrics implements Serializable {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    private LocalTime updateTime;
+    @TableField(fill = FieldFill.UPDATE)
+    private LocalDateTime updateTime;
+
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 }
