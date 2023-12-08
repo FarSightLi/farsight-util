@@ -1,4 +1,4 @@
-package org.example.performance.exception;
+package org.example.performance.component.exception;
 
 public enum CodeMsg {
     //成功

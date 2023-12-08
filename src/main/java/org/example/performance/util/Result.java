@@ -2,8 +2,8 @@ package org.example.performance.util;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.example.performance.exception.BusinessException;
-import org.example.performance.exception.CodeMsg;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 
 import java.io.Serializable;
 import java.util.List;

@@ -73,19 +73,10 @@ public class InfoService {
 
     public ContainerInfo getContainerInfo(Session session, String containerId, String ip) {
         ContainerInfo containerInfo = new ContainerInfo();
+        // 先设置信息，方便日志定位错误
+        containerInfo.setContainerId(containerId);
+        containerInfo.setHostIp(ip);
         try {
-            String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
-            HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
-            String names = detailsMap.get("Names");
-            if (names.contains("_")) {
-                String[] split = names.split("_");
-                containerInfo.setVersion(split[1]);
-                containerInfo.setContainerName(split[0]);
-            } else {
-                log.error("容器名称不符合规范");
-            }
-            containerInfo.setHostIp(ip);
-            containerInfo.setContainerId(containerId);
             // 如果为0代表没有限制CPU
             String cpus = execCmd(session, String.format("docker inspect %s | grep -i nanocpus | awk '{print $2/1000000000}'", containerId));
             containerInfo.setCpus(string2Decimal(cpus));
@@ -97,14 +88,24 @@ public class InfoService {
             containerInfo.setMemSize(parseDataSize(memSize));
             String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
             containerInfo.setCreateTime(getTime(creatTime));
-        } catch (Exception e) {
-            log.error(ip + "的" + containerInfo.getContainerName() + "信息出错了");
-            log.error(e.getMessage());
-        }
-        try {
+            String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
+
+            HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
+            String names = detailsMap.get("Names");
+            if (names.contains("_")) {
+                String[] split = names.split("_");
+                containerInfo.setVersion(split[1]);
+                containerInfo.setContainerName(split[0]);
+            } else {
+                log.error("容器名称不符合规范");
+            }
+
             log.info(ip + " 的 " + containerInfo.getContainerName() + ":\n" + new ObjectMapper().writeValueAsString(containerInfo));
         } catch (JsonProcessingException e) {
             log.error("json解析出错---" + e.getMessage());
+        } catch (Exception e) {
+            log.error("{}的{}容器信息出错了", ip, containerInfo.getContainerId());
+            log.error(e.getMessage(), e);
         }
         return containerInfo;
     }
@@ -124,20 +125,19 @@ public class InfoService {
             String diskUsedSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
             containerMetrics.setMemUsedSize(parseDataSize(memUsedSize));
             containerMetrics.setDiskUsedSize(parseDataSize(diskUsedSize));
-        } catch (Exception e) {
-            log.error(ip + "的" + containerMetrics.getContainerId() + "信息出错了");
-            log.error(e.getMessage());
-        }
-        try {
             log.info(ip + " 的 " + containerMetrics.getContainerId() + ":\n" + new ObjectMapper().writeValueAsString(containerMetrics));
         } catch (JsonProcessingException e) {
             log.error("json解析出错---" + e.getMessage());
+        } catch (Exception e) {
+            log.error("{}的{}容器性能指标出错了", ip, containerMetrics.getContainerId());
+            log.error(e.getMessage());
         }
         return containerMetrics;
     }
 
+
     private String execCmd(Session session, String cmd) {
-        return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8, System.err).trim();
+        return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8).trim();
     }
 
     /**

@@ -60,10 +60,17 @@ public class ScheduledTask {
         hostInfoService.updateOrInsertBatch(hostInfoList);
 
         // 保存容器信息
-        containerInfoService.updateOrInsertContainer(getContainerList(hostInfoList));
+        List<ContainerInfo> containerList = getContainerList(hostInfoList);
+        containerInfoService.updateOrInsertContainer(containerList);
+        // 保存ip和容器id对应关系到缓存
+        CacheInfo.resetContainerMap(containerList
+                .stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList()))));
         log.info("所有主机采集完毕");
     }
 
+    /**
+     * 获得容器信息
+     */
     @Async
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getContainerInfoTask() {
@@ -110,7 +117,7 @@ public class ScheduledTask {
     }
 
     /**
-     * 获得容器信息
+     * 获得容器性能指标
      */
     @Async
     @Scheduled(fixedRate = 60 * 1000) //每分钟
@@ -127,6 +134,7 @@ public class ScheduledTask {
         }));
         containerFutures.forEach(CompletableFuture::join);
         log.info("容器性能指标:" + containerMetricsList);
+        containerMetricsService.insertBatch(containerMetricsList);
         log.info("所有容器性能指标采集完毕");
     }
 
