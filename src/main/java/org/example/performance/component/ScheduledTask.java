@@ -63,7 +63,7 @@ public class ScheduledTask {
         List<ContainerInfo> containerList = getContainerList(hostInfoList);
         containerInfoService.updateOrInsertContainer(containerList);
         // 保存ip和容器id对应关系到缓存
-        CacheInfo.resetContainerMap(containerList
+        CacheInfo.updateCache(containerList
                 .stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList()))));
         log.info("所有主机采集完毕");
     }
@@ -74,7 +74,7 @@ public class ScheduledTask {
     @Async
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getContainerInfoTask() {
-        Map<String, List<String>> containerMap = containerInfoService.getContainerId(ipList);
+        Map<String, List<String>> containerMap = getContainerMap();
         List<ContainerInfo> containerInfoList = Collections.synchronizedList(new ArrayList<>());
         // 容器信息采集
         List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
@@ -122,7 +122,7 @@ public class ScheduledTask {
     @Async
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
-        Map<String, List<String>> containerMap = containerInfoService.getContainerId(ipList);
+        Map<String, List<String>> containerMap = getContainerMap();
         List<ContainerMetrics> containerMetricsList = Collections.synchronizedList(new ArrayList<>());
         // 容器信息采集
         List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
@@ -136,6 +136,18 @@ public class ScheduledTask {
         log.info("容器性能指标:" + containerMetricsList);
         containerMetricsService.insertBatch(containerMetricsList);
         log.info("所有容器性能指标采集完毕");
+    }
+
+    private Map<String, List<String>> getContainerMap() {
+        Map<String, List<String>> containerMap;
+        if (CacheInfo.getContainerMap().isEmpty()) {
+            containerMap = containerInfoService.getContainerId(ipList);
+            log.info("缓存没有容器信息，查了数据库");
+        } else {
+            containerMap = CacheInfo.getContainerMap();
+            log.info("用的缓存信息");
+        }
+        return containerMap;
     }
 
     private List<ContainerInfo> getContainerList(List<HostInfo> hostInfoList) {

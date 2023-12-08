@@ -1,4 +1,4 @@
-package org.example.performance.util;
+package org.example.performance.component;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
