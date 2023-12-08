@@ -15,7 +15,8 @@
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,df_name,df_size,
+        id,
+        df_name,df_size,
         disk_used_size,inode_used_rate,io_rate,update_time
     </sql>
     <insert id="insertBatch">
@@ -28,4 +29,11 @@
             #{item.updateTime},#{item.hostId,jdbcType=NUMERIC})
         </foreach>
     </insert>
+    <select id="selectNewestByHostId" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM disk_info WHERE update_time =(SELECT max(update_time) FROM disk_info WHERE host_id =
+        #{hostId,jdbcType=NUMERIC}) and
+        host_id = #{hostId,jdbcType=NUMERIC};
+    </select>
 </mapper>

@@ -1,8 +1,8 @@
 package org.example.performance.demo;
 
-import org.example.performance.config.SessionConfig;
-import org.example.performance.service.InfoService;
 import org.junit.jupiter.api.Test;
+
+import java.math.BigDecimal;
 
 /**
  * @author lilongsheng
@@ -14,10 +14,9 @@ import org.junit.jupiter.api.Test;
 public class DemoTest {
     @Test
     public void test1() {
-        InfoService infoService = new InfoService();
-        infoService.getContainerInfo(SessionConfig.getSession("192.168.1.167"), "12341231", "192.168.1.167");
-        infoService.getContainerInfo(SessionConfig.getSession("192.168.1.167"), "3f9022724014", "192.168.1.167");
-        infoService.getContainerIndexInfo(SessionConfig.getSession("192.168.1.167"), "12341231", "192.168.1.167");
-        infoService.getContainerIndexInfo(SessionConfig.getSession("192.168.1.167"), "3f9022724014", "192.168.1.167");
+        BigDecimal bigDecimal = BigDecimal.valueOf(0.00);
+        bigDecimal.add(BigDecimal.valueOf(1.74));
+        System.out.println(bigDecimal);
+        System.out.println(bigDecimal.add(BigDecimal.valueOf(1.74)));
     }
 }

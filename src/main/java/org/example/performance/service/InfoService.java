@@ -9,9 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.performance.pojo.po.*;
 
 import java.math.BigDecimal;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -20,12 +18,15 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static org.example.performance.util.DataUtil.*;
+
 @Slf4j
 public class InfoService {
 
     public HostInfo getSysInfo(Session session, String ip) {
         HostInfo hostInfo = new HostInfo();
         hostInfo.setIp(ip);
+        hostInfo.setHostName(execCmd(session, "hostname"));
         hostInfo.setCpuCores(Integer.valueOf(execCmd(session, "lscpu | awk '/^CPU\\(s\\):/ {print $2}'")));
         hostInfo.setCpuArch(execCmd(session, "lscpu | awk '/^Architecture:/ {print $2}'"));
         hostInfo.setSysVersion(execCmd(session, "cat /etc/redhat-release"));
@@ -172,62 +173,6 @@ public class InfoService {
             diskInfoList.add(diskInfo);
         }
         return diskInfoList;
-    }
-
-    private BigDecimal string2Decimal(String value) {
-        BigDecimal bigDecimal = new BigDecimal(value);
-        return bigDecimal.setScale(2, RoundingMode.HALF_UP);
-    }
-
-    /**
-     * 移除百分号
-     *
-     * @param target
-     * @return
-     */
-    private String removePercent(String target) {
-        return target.replace("%", "").trim();
-    }
-
-    private LocalDateTime getTime(String stringTime) {
-        return LocalDateTime.parse(stringTime, DateTimeFormatter.ISO_DATE_TIME);
-    }
-
-    /**
-     * 根据传进的字符自动解析为MB大小
-     *
-     * @param dataSizeString
-     * @return
-     */
-    private BigDecimal parseDataSize(String dataSizeString) {
-        Pattern pattern = Pattern.compile("(\\d+\\.?\\d*)([BKMGTPEZYbkmgtpezy]B?)");
-        Matcher matcher = pattern.matcher(dataSizeString);
-
-        if (matcher.find()) {
-            String valueStr = matcher.group(1);
-            String unit = matcher.group(2).toUpperCase();
-            BigDecimal value = new BigDecimal(valueStr);
-
-            switch (unit) {
-                case "B":
-                    return value.divide(BigDecimal.valueOf(1024 * 1024), 2, RoundingMode.HALF_UP);
-                case "KB":
-                case "K":
-                    return value.divide(BigDecimal.valueOf(1024), 2, RoundingMode.HALF_UP);
-                case "MB":
-                case "MIB":
-                case "M":
-                    return value;
-                case "GB":
-                case "G":
-                case "GIB":
-                    return value.multiply(BigDecimal.valueOf(1024));
-                default:
-                    throw new IllegalArgumentException("Unsupported unit: " + unit);
-            }
-        } else {
-            return new BigDecimal(dataSizeString).divide(BigDecimal.valueOf(1024 * 1024), 2, RoundingMode.HALF_UP);
-        }
     }
 
 

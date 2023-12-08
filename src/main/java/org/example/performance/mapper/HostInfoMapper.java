@@ -17,6 +17,8 @@ import java.util.List;
 
 public interface HostInfoMapper extends BaseMapper<HostInfo> {
     int updateOrInsertBatch(@Param("hostInfoCollection") List<HostInfo> hostInfoCollection);
+
+    HostInfo getOneByIp(@Param("ip") String ip);
 }
 
 

@@ -9,6 +9,7 @@
         <result property="cpuArch" column="cpu_arch" jdbcType="VARCHAR"/>
         <result property="cpuCores" column="cpu_cores" jdbcType="INTEGER"/>
         <result property="ip" column="ip" jdbcType="VARCHAR"/>
+        <result property="hostName" column="host_name" jdbcType="VARCHAR"/>
         <result property="kernelRelease" column="kernel_release" jdbcType="VARCHAR"/>
         <result property="memSize" column="mem_size" jdbcType="DECIMAL"/>
         <result property="sysVersion" column="sys_version" jdbcType="VARCHAR"/>
@@ -18,18 +19,19 @@
     <sql id="Base_Column_List">
         id
         ,cpu_arch,cpu_cores,
-        disk_info,ip,kernel_release,
+        ip,host_name,kernel_release,
         mem_size,sys_version,update_time
     </sql>
 
     <insert id="updateOrInsertBatch" parameterType="org.example.performance.pojo.po.HostInfo">
-        insert into host_info(cpu_arch, cpu_cores, ip, kernel_release, mem_size, sys_version, update_time)
+        insert into host_info(cpu_arch, cpu_cores, ip,host_name, kernel_release, mem_size, sys_version, update_time)
         values
         <foreach collection="hostInfoCollection" item="item" separator=",">
             (
             #{item.cpuArch, jdbcType=VARCHAR},
             #{item.cpuCores, jdbcType=NUMERIC},
             #{item.ip, jdbcType=VARCHAR},
+            #{item.hostName, jdbcType=VARCHAR},
             #{item.kernelRelease, jdbcType=VARCHAR},
             #{item.memSize, jdbcType=DECIMAL},
             #{item.sysVersion, jdbcType=VARCHAR},
@@ -43,8 +45,17 @@
         END,
         mem_size = CASE WHEN VALUES(mem_size) IS NOT NULL THEN VALUES(mem_size) ELSE mem_size END,
         sys_version = CASE WHEN VALUES(sys_version) IS NOT NULL THEN VALUES(sys_version) ELSE sys_version END,
+        host_name = CASE WHEN VALUES(host_name) IS NOT NULL THEN VALUES(host_name) ELSE host_name END,
         update_time = CASE WHEN VALUES(update_time) IS NOT NULL THEN VALUES(update_time) ELSE update_time END;
     </insert>
+
+    <select id="getOneByIp" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from host_info
+        where
+        ip = #{ip,jdbcType=VARCHAR}
+    </select>
 
 
 </mapper>

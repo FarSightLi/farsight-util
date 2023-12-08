@@ -2,7 +2,7 @@ package org.example.performance.component.exception;
 
 public enum CodeMsg {
     //成功
-    SUCCESS(0, "操作成功"),
+    SUCCESS(200, "success"),
     TOKEN_ERROR(5000, "Token错误"),
     SYSTEM_ERROR(10001, "系统错误"),
     DATABASE_ERROR(10002, "数据库错误"),

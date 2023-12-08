@@ -19,14 +19,14 @@ public class Result<T> implements Serializable {
     private String message;
 
     //数据信息
-    private T result;
+    private T data;
 
 
-    public Result(Integer code, String message, T result) {
+    public Result(Integer code, String message, T data) {
 
         this.code = code;
         this.message = message;
-        this.result = result;
+        this.data = data;
     }
 
     private Result(CodeMsg codeMsg) {
@@ -35,29 +35,29 @@ public class Result<T> implements Serializable {
         }
     }
 
-    private Result(CodeMsg codeMsg, String message, T result) {
+    private Result(CodeMsg codeMsg, String message, T data) {
         if (codeMsg != null) {
             this.code = codeMsg.getCode();
         }
         this.message = message;
-        this.result = result;
+        this.data = data;
     }
 
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> Result<T> success(String message, T result) {
-        return new Result(CodeMsg.SUCCESS, message, result);
+    public static <T> Result<T> success(String message, T data) {
+        return new Result(CodeMsg.SUCCESS, CodeMsg.SUCCESS.getCodeRemark(), data);
     }
 
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static <T> Result<List<T>> successForPage(List<T> list) {
-        return new Result(CodeMsg.SUCCESS, null, list);
+        return new Result(CodeMsg.SUCCESS, CodeMsg.SUCCESS.getCodeRemark(), list);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> Result<T> success(T result) {
-        return new Result(CodeMsg.SUCCESS, null, result);
+    public static <T> Result<T> success(T data) {
+        return new Result(CodeMsg.SUCCESS, CodeMsg.SUCCESS.getCodeRemark(), data);
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -81,8 +81,8 @@ public class Result<T> implements Serializable {
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})
-    public static <T> Result<T> error(CodeMsg codeMsg, T result) {
-        return new Result(codeMsg, null, result);
+    public static <T> Result<T> error(CodeMsg codeMsg, T data) {
+        return new Result(codeMsg, null, data);
     }
 
     public Integer getCode() {
@@ -102,11 +102,11 @@ public class Result<T> implements Serializable {
         this.message = message;
     }
 
-    public T getResult() {
-        return result;
+    public T getData() {
+        return data;
     }
 
-    public void setResult(T result) {
-        this.result = result;
+    public void setData(T data) {
+        this.data = data;
     }
 }

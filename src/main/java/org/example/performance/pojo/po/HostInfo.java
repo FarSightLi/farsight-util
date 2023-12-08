@@ -42,6 +42,12 @@ public class HostInfo implements Serializable {
      */
     private String ip;
 
+
+    /**
+     * 主机名字
+     */
+    private String hostName;
+
     /**
      * 内核版本
      */

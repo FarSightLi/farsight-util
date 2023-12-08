@@ -2,6 +2,7 @@ package org.example.performance.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.example.performance.pojo.po.HostInfo;
+import org.example.performance.pojo.vo.HostInfoVO;
 
 import java.util.Collection;
 import java.util.List;
@@ -23,4 +24,6 @@ public interface HostInfoService extends IService<HostInfo> {
      * @Throw BusinessException
      */
     Map<String, Integer> getIp2IdMap(Collection<String> ipList);
+
+    HostInfoVO getHostInfo(String ip);
 }
