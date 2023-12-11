@@ -7,6 +7,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.pojo.po.*;
+import org.example.performance.util.DataUtil;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -83,10 +84,19 @@ public class InfoService {
             containerInfo.setCpus(string2Decimal(cpus));
             String imageSize = execCmd(session, String.format("docker images `docker system df -v | awk '/%s/ {print $2}'` | awk 'END{print $NF}'", containerId));
             containerInfo.setImageSize(parseDataSize(imageSize));
-            String diskSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
-            containerInfo.setDiskSize(parseDataSize(diskSize));
-            String memSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $6} '", containerId));
-            containerInfo.setMemSize(parseDataSize(memSize));
+            String diskSizeStr = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
+            BigDecimal diskSize = parseDataSize(diskSizeStr);
+            // diskSize>0，即当前容器在运行
+            if (diskSize.compareTo(BigDecimal.ZERO) == 1) {
+                containerInfo.setDiskSize(diskSize);
+            }
+            containerInfo.setDiskSize(diskSize);
+            String memSizeStr = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $6} '", containerId));
+            BigDecimal memSize = parseDataSize(memSizeStr);
+            // memSize>0，即当前容器在运行
+            if (memSize.compareTo(BigDecimal.ZERO) == 1) {
+                containerInfo.setMemSize(memSize);
+            }
             String creatTime = execCmd(session, String.format("docker inspect --format '{{.Created}}' %s", containerId));
             containerInfo.setCreateTime(getTime(creatTime));
             String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
@@ -119,7 +129,7 @@ public class InfoService {
             HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
             containerMetrics.setState(detailsMap.get("State"));
             String cpuRate = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $3} '", containerId));
-            containerMetrics.setCpuRate(Double.parseDouble(removePercent(cpuRate)));
+            containerMetrics.setCpuRate(DataUtil.string2Decimal(removePercent(cpuRate)));
             String onlineTime = execCmd(session, String.format("docker inspect --format '{{.State.StartedAt}}' %s", containerId));
             containerMetrics.setRestartTime(getTime(onlineTime));
             String memUsedSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $4} '", containerId));
