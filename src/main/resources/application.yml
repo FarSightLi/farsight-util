@@ -4,6 +4,14 @@ ipList:
 jwt:
   secret: pKRpxJKnd5Aj0FCZ8g9q7nZO+BVx1pceq/kbv+wvHaGmePjA9CWB6GQIZ+84EK7ErKwnlrKNmHV/WTnoQiFXmA== #JWT加解密使用的密钥
 spring:
+  jackson:
+    date-format: "yyyy-MM-dd HH:mm:ss"
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+      write-date-timestamps-as-nanoseconds: false
+    deserialization:
+      read-date-timestamps-as-nanoseconds: false
   datasource:
     url: jdbc:mysql://192.168.1.167:3316/performance?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
     username: root

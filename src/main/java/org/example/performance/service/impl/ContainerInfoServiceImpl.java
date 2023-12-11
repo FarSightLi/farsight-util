@@ -61,6 +61,11 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
         baseMapper.updateOrInsertBatch(containerInfoList);
         log.info("主机对应的容器id更新完毕");
     }
+
+    @Override
+    public List<ContainerInfo> getListByContainerIdList(List<String> containerIdList) {
+        return baseMapper.selectList(new LambdaQueryWrapper<ContainerInfo>().in(ContainerInfo::getContainerId, containerIdList));
+    }
 }
 
 

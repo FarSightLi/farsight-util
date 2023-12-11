@@ -34,7 +34,7 @@ public class ContainerMetrics implements Serializable {
     /**
      * CPU使用率
      */
-    private Double cpuRate;
+    private BigDecimal cpuRate;
 
     /**
      * 重启时间

@@ -17,7 +17,7 @@
     <sql id="Base_Column_List">
         id,container_id,cpu_rate,
         restart_time,state,mem_used_size,
-        disk_used_size
+        disk_used_size,update_time
     </sql>
     <insert id="insertBatch">
         insert into container_metrics(id,container_id,cpu_rate,
@@ -30,4 +30,21 @@
             #{item.diskUsedSize,jdbcType=DECIMAL},#{item.updateTime})
         </foreach>
     </insert>
+    <select id="listAllByContainerId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from container_metrics
+        where
+        container_id in #{containerId,jdbcType=VARCHAR}
+    </select>
+    <select id="getByContainerIdList" resultMap="BaseResultMap">
+        SELECT
+        <include refid="Base_Column_List"/>
+        FROM container_metrics
+        WHERE container_id IN
+        <foreach collection="containerIds" item="containerId" open="(" separator="," close=")">
+            #{containerId}
+        </foreach>
+        AND update_time BETWEEN #{startTime} AND #{endTime}
+    </select>
 </mapper>

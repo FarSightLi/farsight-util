@@ -28,4 +28,6 @@ public interface ContainerInfoService extends IService<ContainerInfo> {
      * @param containerInfoList 容器信息列表
      */
     void updateOrInsertContainer(List<ContainerInfo> containerInfoList);
+
+    List<ContainerInfo> getListByContainerIdList(List<String> containerIdList);
 }

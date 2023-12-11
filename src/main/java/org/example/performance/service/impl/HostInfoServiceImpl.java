@@ -54,7 +54,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
             Set<String> differenceSet = new HashSet<>(ipList);
             differenceSet.removeAll(ip2IdMap.keySet());
             log.warn("有ip没查询到对应的主机id信息，ip为：{}", differenceSet);
-            throw new BusinessException(CodeMsg.DATABASE_ERROR);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR);
         }
         return ip2IdMap;
     }
