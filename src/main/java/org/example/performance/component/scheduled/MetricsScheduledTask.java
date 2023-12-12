@@ -1,15 +1,18 @@
-package org.example.performance.component;
+package org.example.performance.component.scheduled;
 
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.CacheInfo;
 import org.example.performance.config.SessionConfig;
 import org.example.performance.config.ThreadPoolConfig;
 import org.example.performance.pojo.po.*;
 import org.example.performance.service.*;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.DependsOn;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -20,7 +23,8 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-public class ScheduledTask {
+@DependsOn("hostXmlScheduledTask")
+public class MetricsScheduledTask {
     @Value("#{'${ipList}'.split(',')}")
     private List<String> ipList = new ArrayList<>();
 
@@ -35,6 +39,12 @@ public class ScheduledTask {
     private ContainerInfoService containerInfoService;
     @Resource
     private ContainerMetricsService containerMetricsService;
+
+    @PostConstruct
+    public void init() {
+        HostXmlScheduledTask.read();
+        log.info("采集任务前获得主机账号密码");
+    }
 
     /**
      * 获得主机信息

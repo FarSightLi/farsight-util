@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<monitor>
+    <!--1.主机监控信息,调整为每个主机对应IP、端口、账号、密码(或秘钥文件路径)-->
+    <host>
+        <property name="hosts">
+            <list>
+                <value>192.168.1.167:22:farsight:123456</value>
+            </list>
+            <list>
+                <value>192.168.32.128:22:farsight:123456</value>
+            </list>
+        </property>
+    </host>
+</monitor>
