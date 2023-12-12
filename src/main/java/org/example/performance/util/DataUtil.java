@@ -27,6 +27,10 @@ public class DataUtil {
         return bigDecimal.setScale(2, RoundingMode.HALF_UP);
     }
 
+    public static BigDecimal double2Decimal(double value) {
+        return BigDecimal.valueOf(value).setScale(2, RoundingMode.HALF_UP);
+    }
+
     /**
      * 移除百分号
      *

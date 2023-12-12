@@ -40,7 +40,7 @@ public class InfoService {
         try {
             log.info(ip + " 主机信息采集完毕:\n" + new ObjectMapper().writeValueAsString(hostInfo));
         } catch (JsonProcessingException e) {
-            e.getMessage();
+            log.error(e.getMessage(), e);
         }
         return hostInfo;
     }
@@ -141,7 +141,7 @@ public class InfoService {
             log.error("json解析出错---" + e.getMessage());
         } catch (Exception e) {
             log.error("{}的{}容器性能指标出错了", ip, containerMetrics.getContainerId());
-            log.error(e.getMessage());
+            log.error(e.toString(), e);
         }
         return containerMetrics;
     }

@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.pojo.po.ContainerInfo;
 
 import java.math.BigDecimal;
@@ -20,7 +23,13 @@ import java.time.LocalDateTime;
  * @date 2023/12/5 16:42:12
  */
 @Data
+@Slf4j
 public class ContainerInfoVO extends ContainerInfo {
+    public enum Field {
+        MEM,
+        CPU,
+        DISK
+    }
     private BigDecimal maxCpuRate;
     private BigDecimal maxCpuUsage;
     private BigDecimal maxDiskUsage;
@@ -28,14 +37,17 @@ public class ContainerInfoVO extends ContainerInfo {
     private BigDecimal maxMemUsage;
     private BigDecimal maxMemUsedRate;
     private BigDecimal avgCpuUsage;
+    private BigDecimal avgCpuRate;
     private BigDecimal avgDiskUsage;
+    private BigDecimal avgDiskRate;
     private BigDecimal avgMemUsage;
-    private Byte maxDiskUsedState;
-    private Byte maxCpuState;
-    private Byte maxMemUsedState;
-    private Byte avgMemUsedState;
-    private Byte avgCpuState;
-    private Byte avgDiskUsedState;
+    private BigDecimal avgMemRate;
+    private Integer maxDiskUsedState;
+    private Integer maxCpuState;
+    private Integer maxMemUsedState;
+    private Integer avgMemUsedState;
+    private Integer avgCpuState;
+    private Integer avgDiskUsedState;
     private Long onlineTime;
 
     /**
@@ -65,6 +77,62 @@ public class ContainerInfoVO extends ContainerInfo {
      * 使用磁盘大小
      */
     private BigDecimal diskUsedSize;
+
+    public BigDecimal getMaxRate(Field field) {
+        BigDecimal result;
+        if (Field.MEM.equals(field)) {
+            result = this.maxMemUsedRate;
+        } else if (Field.CPU.equals(field)) {
+            result = this.maxCpuRate;
+        } else if (Field.DISK.equals(field)) {
+            result = this.maxDiskUsedRate;
+        } else {
+            log.error("不支持的字段：{}", field);
+            throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+        }
+        return result;
+    }
+
+    public BigDecimal getAvgRate(Field field) {
+        BigDecimal result;
+        if (Field.MEM.equals(field)) {
+            result = this.avgMemRate;
+        } else if (Field.CPU.equals(field)) {
+            result = this.avgCpuRate;
+        } else if (Field.DISK.equals(field)) {
+            result = this.avgDiskRate;
+        } else {
+            log.error("不支持的字段：{}", field);
+            throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+        }
+        return result;
+    }
+
+    public void setAvgState(Field field, Integer state) {
+        if (Field.MEM.equals(field)) {
+            this.avgMemUsedState = state;
+        } else if (Field.CPU.equals(field)) {
+            this.avgCpuState = state;
+        } else if (Field.DISK.equals(field)) {
+            this.avgDiskUsedState = state;
+        } else {
+            log.error("不支持的字段：{}", field);
+            throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+        }
+    }
+
+    public void setMaxState(Field field, Integer state) {
+        if (Field.MEM.equals(field)) {
+            this.maxMemUsedState = state;
+        } else if (Field.CPU.equals(field)) {
+            this.maxCpuState = state;
+        } else if (Field.DISK.equals(field)) {
+            this.maxDiskUsedState = state;
+        } else {
+            log.error("不支持的字段：{}", field);
+            throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+        }
+    }
 
 
     @Override
