@@ -22,6 +22,6 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result handleMyCustomException(BusinessException ex) {
         log.info("全局异常处理生效" + ex.getMessage());
-        return Result.error(ex.getCodeMsg(), ex.getMessage());
+        return Result.error(ex);
     }
 }

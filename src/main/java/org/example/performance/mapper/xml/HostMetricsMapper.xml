@@ -23,7 +23,7 @@
         id,host_id,mem,
         byte_in,host_load,cpu,
         disk,tcp,mem_rate,
-        io,inode,byte_out
+        io,inode,byte_out,update_time
     </sql>
     <insert id="insertBatch">
         insert into host_metrics(id,host_id,
@@ -40,4 +40,13 @@
             #{item.byteOut,jdbcType=DECIMAL},#{item.updateTime})
         </foreach>
     </insert>
+
+    <select id="selectByHostId" resultMap="BaseResultMap">
+        select
+        <include refid="Base_Column_List"/>
+        from host_metrics
+        where
+        host_id = #{hostId}
+        AND update_time BETWEEN #{startTime} AND #{endTime}
+    </select>
 </mapper>

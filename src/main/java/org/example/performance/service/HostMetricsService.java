@@ -2,7 +2,9 @@ package org.example.performance.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.example.performance.pojo.po.HostMetrics;
+import org.example.performance.pojo.vo.HostMetricsVO;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -12,4 +14,6 @@ import java.util.List;
 */
 public interface HostMetricsService extends IService<HostMetrics> {
     void insertBatch(List<HostMetrics> hostMetricsList);
+
+    List<HostMetricsVO> getMetricsVO(String ip, LocalDateTime startTime, LocalDateTime endTime);
 }
