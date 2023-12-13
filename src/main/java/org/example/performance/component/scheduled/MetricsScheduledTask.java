@@ -39,10 +39,14 @@ public class MetricsScheduledTask {
     private ContainerInfoService containerInfoService;
     @Resource
     private ContainerMetricsService containerMetricsService;
+    @Resource
+    private HostXmlScheduledTask hostXmlScheduledTask;
+    @Resource
+    private CacheInfo cacheInfo;
 
     @PostConstruct
     public void init() {
-        HostXmlScheduledTask.read();
+        hostXmlScheduledTask.read();
         log.info("采集任务前获得主机账号密码");
     }
 
@@ -73,7 +77,7 @@ public class MetricsScheduledTask {
         List<ContainerInfo> containerList = getContainerList(hostInfoList);
         containerInfoService.updateOrInsertContainer(containerList);
         // 保存ip和容器id对应关系到缓存
-        CacheInfo.updateCache(containerList
+        cacheInfo.updateCache(containerList
                 .stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList()))));
         log.info("所有主机采集完毕");
     }
@@ -150,11 +154,11 @@ public class MetricsScheduledTask {
 
     private Map<String, List<String>> getContainerMap() {
         Map<String, List<String>> containerMap;
-        if (CacheInfo.getContainerMap().isEmpty()) {
+        if (cacheInfo.getContainerMap().isEmpty()) {
             containerMap = containerInfoService.getContainerId(ipList);
             log.info("缓存没有容器信息，查了数据库");
         } else {
-            containerMap = CacheInfo.getContainerMap();
+            containerMap = cacheInfo.getContainerMap();
             log.info("用的缓存信息");
         }
         return containerMap;

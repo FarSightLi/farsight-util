@@ -2,12 +2,14 @@ package org.example.performance.component.scheduled;
 
 import cn.hutool.core.util.XmlUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.CacheInfo;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.annotation.Resource;
 import javax.xml.xpath.XPathConstants;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +30,9 @@ import java.util.stream.Collectors;
 public class HostXmlScheduledTask {
     private static final ConcurrentHashMap<String, List<String>> HOST_MAP = new ConcurrentHashMap<>();
 
+    @Resource
+    private CacheInfo cacheInfo;
+
     @Scheduled(fixedRate = 30 * 60 * 1000) // 30min
     public void readXml() {
         read();
@@ -37,7 +42,7 @@ public class HostXmlScheduledTask {
         return HOST_MAP;
     }
 
-    public static void read() {
+    public void read() {
         Document document = XmlUtil.readXML("host/hosts.xml");
         NodeList nodeList = (NodeList) XmlUtil.getByXPath("//property[@name='hosts']/list/value", document, XPathConstants.NODESET);
         // 遍历所有的 value 元素
@@ -47,5 +52,7 @@ public class HostXmlScheduledTask {
             HOST_MAP.put(infoList.get(0), infoList);
         }
         log.info("主机账号密码信息读取完毕");
+        cacheInfo.setIpList(HOST_MAP.keySet().getMappedValue());
+        log.info("ipList刷新完毕");
     }
 }

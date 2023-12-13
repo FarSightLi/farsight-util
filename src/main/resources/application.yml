@@ -4,6 +4,9 @@ ipList:
 jwt:
   secret: pKRpxJKnd5Aj0FCZ8g9q7nZO+BVx1pceq/kbv+wvHaGmePjA9CWB6GQIZ+84EK7ErKwnlrKNmHV/WTnoQiFXmA== #JWT加解密使用的密钥
 spring:
+  redis:
+    host: 192.168.1.167
+    port: 6379
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
     time-zone: GMT+8
