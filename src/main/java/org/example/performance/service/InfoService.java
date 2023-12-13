@@ -50,9 +50,9 @@ public class InfoService {
         hostmetrics.setHostIp(ip);
         hostmetrics.setMemRate(string2Decimal(execCmd(session, "tsar --mem -C -s  util  | awk -F= '{print $2}'")));
         hostmetrics.setMem(parseDataSize(execCmd(session, "tsar --mem -C -s  used  | awk -F= '{print $2}'")));
-        hostmetrics.setByteIn(parseDataSize(execCmd(session, "cat /proc/net/dev | grep ens | awk '{print $2}'")));
+        hostmetrics.setByteIn(parseDataSize(execCmd(session, "tsar --traffic -C -s bytout | awk -F= '{print$2}'")));
         hostmetrics.setHostLoad(string2Decimal(execCmd(session, "tsar --load -C -s load1 |  awk -F= '{print $2}'")));
-        hostmetrics.setByteOut(parseDataSize(execCmd(session, "cat /proc/net/dev | grep ens | awk '{print $10} '")));
+        hostmetrics.setByteOut(parseDataSize(execCmd(session, "tsar --traffic -C -s bytin | awk -F= '{print$2}'")));
         hostmetrics.setIo(string2Decimal(execCmd(session, "iostat -x | awk '/%util/ {getline; print $NF}'")));
         hostmetrics.setCpu(string2Decimal(execCmd(session, "tsar --cpu -C -s util |  awk -F= '{print $2}'")));
         hostmetrics.setDisk(string2Decimal(removePercent(execCmd(session, "df -h | awk '$NF == \"/\" {print $5}'"))));

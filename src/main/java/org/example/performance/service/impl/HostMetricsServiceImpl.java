@@ -132,6 +132,13 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
         return vo;
     }
 
+    /**
+     * 根据时间间隔获得每个区间内最新的数据，排序后进行返回
+     *
+     * @param oldList               未筛选前的列表
+     * @param timeIntervalInSeconds 时间间隔（以秒为单位）
+     * @return 分割后的列表
+     */
     private List<HostMetrics> filterListByTime(List<HostMetrics> oldList, int timeIntervalInSeconds) {
         Map<Long, List<HostMetrics>> hourlyMetricsMap = oldList.stream()
                 .collect(Collectors.groupingBy(
