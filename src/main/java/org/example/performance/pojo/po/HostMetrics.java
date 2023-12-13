@@ -7,6 +7,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
+import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -20,7 +23,13 @@ import java.util.List;
  */
 @TableName(value = "host_metrics")
 @Data
+@Slf4j
 public class HostMetrics implements Serializable {
+
+    public enum Type {
+        MEM, BYTIN, LOAD, CPU, DISK, TCP, MEM_RATE, IO, INODE, BYOUT
+    }
+
     /**
      * ID
      */
@@ -105,4 +114,37 @@ public class HostMetrics implements Serializable {
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 传入一个字段type来动态获得字段值
+     *
+     * @param type 字段类型
+     * @return 返回字段对应的值
+     */
+    public BigDecimal getInfoByType(Type type) {
+        if (Type.MEM.equals(type)) {
+            return mem;
+        } else if (Type.BYTIN.equals(type)) {
+            return byteIn;
+        } else if (Type.LOAD.equals(type)) {
+            return hostLoad;
+        } else if (Type.CPU.equals(type)) {
+            return cpu;
+        } else if (Type.DISK.equals(type)) {
+            return disk;
+        } else if (Type.TCP.equals(type)) {
+            return tcp;
+        } else if (Type.MEM_RATE.equals(type)) {
+            return memRate;
+        } else if (Type.IO.equals(type)) {
+            return io;
+        } else if (Type.INODE.equals(type)) {
+            return inode;
+        } else if (Type.BYOUT.equals(type)) {
+            return byteOut;
+        } else {
+            log.error("不支持的字段类型{}", type);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+        }
+    }
 }

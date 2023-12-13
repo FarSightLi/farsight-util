@@ -18,7 +18,7 @@ public class HostMetricsVO {
 
     private String name;
 
-    private int state;
+    private Integer state;
 
     private String type;
 
@@ -32,7 +32,5 @@ public class HostMetricsVO {
 
 
     private LocalDateTime monitorTime;
-
-    // Getter and Setter methods
 
 }

@@ -2,6 +2,7 @@ package org.example.performance.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.mapper.HostMetricsMapper;
 import org.example.performance.pojo.po.AlertRule;
@@ -66,78 +67,29 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
         List<HostMetricsVO> voList = new ArrayList<>();
         // 给lambda使用的map
         Map<String, AlertRule> finalAlertMap = alertMap;
-        map.forEach((time, info) -> {
-            // TODO 优化硬编码
-            String memSumName = "host.mem.sum";
-            voList.add(createHostMetricsVO("主机内存使用量(MB)", memSumName, "mem",
-                    info.getMem(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(memSumName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(memSumName, new AlertRule()).getErrorValue()));
-
-            String bytinName = "host.network.bytin";
-            voList.add(createHostMetricsVO("主机网络流量IN(MB/s)", bytinName, "bytin",
-                    info.getByteIn(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(bytinName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(bytinName, new AlertRule()).getErrorValue()));
-
-            String loadName = "host.load.avg";
-            voList.add(createHostMetricsVO("主机内存使用量(1min)", loadName, "load",
-                    info.getHostLoad(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(loadName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(loadName, new AlertRule()).getErrorValue()));
-
-            String cpuRateName = "host.cpu.rate";
-            voList.add(createHostMetricsVO("主机CPU使用率(%)", cpuRateName, "cpu",
-                    info.getHostLoad(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(cpuRateName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(cpuRateName, new AlertRule()).getErrorValue()));
-
-            String diskRateName = "host.disk.rate";
-            voList.add(createHostMetricsVO("主机磁盘使用率(/data，%)", diskRateName, "disk",
-                    info.getDisk(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(diskRateName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(diskRateName, new AlertRule()).getErrorValue()));
-
-            String tcpName = "host.network.tcp";
-            voList.add(createHostMetricsVO("主机TCP连接数", tcpName, "tcp",
-                    info.getTcp(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(tcpName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(tcpName, new AlertRule()).getErrorValue()));
-
-            String memRateName = "host.mem.rate";
-            voList.add(createHostMetricsVO("主机内存使用率(%)", memRateName, "mem_rate",
-                    info.getMemRate(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(memRateName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(memRateName, new AlertRule()).getErrorValue()));
-
-            String ioRateName = "host.disk.io.rate";
-            voList.add(createHostMetricsVO("主机磁盘IO使用率(/data，%)", ioRateName, "io",
-                    info.getIo(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(ioRateName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(ioRateName, new AlertRule()).getErrorValue()));
-
-            String inodeRateName = "host.disk.inode.rate";
-            voList.add(createHostMetricsVO("主机磁盘INODE使用率(/data，%)", inodeRateName, "io",
-                    info.getInode(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(inodeRateName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(inodeRateName, new AlertRule()).getErrorValue()));
-
-            String bytoutName = "host.disk.inode.rate";
-            voList.add(createHostMetricsVO("主机网络流量OUT(MB/s)", bytoutName, "io",
-                    info.getByteOut(),
-                    info.getUpdateTime(),
-                    finalAlertMap.getOrDefault(bytoutName, new AlertRule()).getWarningValue(),
-                    finalAlertMap.getOrDefault(bytoutName, new AlertRule()).getErrorValue()));
-        });
+        @lombok.Data
+        @AllArgsConstructor
+        class Data {
+            String name;
+            String type;
+            String desc;
+            HostMetrics.Type fieldType;
+        }
+        List<Data> dataList = new ArrayList<>();
+        dataList.add(new Data("host.mem.sum", "mem", "主机内存使用量(MB)", HostMetrics.Type.MEM));
+        dataList.add(new Data("host.network.bytin", "bytin", "主机网络流量IN(MB/s)", HostMetrics.Type.BYTIN));
+        dataList.add(new Data("host.load.avg", "load", "主机负载(1min)", HostMetrics.Type.LOAD));
+        dataList.add(new Data("host.cpu.rate", "cpu", "主机CPU使用率(%)", HostMetrics.Type.CPU));
+        dataList.add(new Data("host.disk.rate", "disk", "主机磁盘使用率(/data，%)", HostMetrics.Type.DISK));
+        dataList.add(new Data("host.network.tcp", "tcp", "主机TCP连接数", HostMetrics.Type.TCP));
+        dataList.add(new Data("host.mem.rate", "mem_rate", "主机内存使用率(%)", HostMetrics.Type.MEM_RATE));
+        dataList.add(new Data("host.disk.io.rate", "io", "主机磁盘IO使用率(/data，%)", HostMetrics.Type.MEM_RATE));
+        dataList.add(new Data("host.disk.inode.rate", "inode", "主机磁盘INODE使用率(/data，%)", HostMetrics.Type.INODE));
+        dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetrics.Type.BYOUT));
+        map.forEach((time, info) -> dataList.forEach(data -> voList.add(createHostMetricsVO(data.desc,
+                data.name, data.type, info.getInfoByType(data.fieldType), info.getUpdateTime(),
+                finalAlertMap.getOrDefault(data.name, new AlertRule()).getWarningValue(),
+                finalAlertMap.getOrDefault(data.name, new AlertRule()).getErrorValue()))));
         return voList;
     }
 
