@@ -3,6 +3,7 @@ package org.example.performance.controller;
 import org.example.performance.component.Result;
 import org.example.performance.pojo.dto.InfoDTO;
 import org.example.performance.pojo.vo.ContainerInfoVO;
+import org.example.performance.pojo.vo.ContainerTrendVO;
 import org.example.performance.service.ContainerMetricsService;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,5 +34,16 @@ public class ContainerController {
     @PostMapping("/metric")
     public Result<List<ContainerInfoVO>> getMetric(@RequestBody InfoDTO dto) {
         return Result.success(containerMetricsService.getContainerMetricsByIp(dto.getIp(), dto.getStartTime(), dto.getEndTime()));
+    }
+
+    /**
+     * 获得容器的图表信息
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/metricTrend")
+    public Result<List<ContainerTrendVO>> metricTrend(@RequestBody InfoDTO dto) {
+        return Result.success(containerMetricsService.getMetricTrend(dto.getIp(), dto.getStartTime(), dto.getEndTime()));
     }
 }

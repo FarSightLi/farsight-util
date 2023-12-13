@@ -3,6 +3,7 @@ package org.example.performance.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.example.performance.pojo.po.ContainerMetrics;
 import org.example.performance.pojo.vo.ContainerInfoVO;
+import org.example.performance.pojo.vo.ContainerTrendVO;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -17,4 +18,5 @@ public interface ContainerMetricsService extends IService<ContainerMetrics> {
 
     List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime);
 
+    List<ContainerTrendVO> getMetricTrend(String ip, LocalDateTime startTime, LocalDateTime endTime);
 }
