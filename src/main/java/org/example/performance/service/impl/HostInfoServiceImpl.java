@@ -14,6 +14,7 @@ import org.example.performance.pojo.vo.HostInfoVO;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.util.DataUtil;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -36,6 +37,12 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
     private HostInfoMapper hostInfoMapper;
     @Resource
     private DiskInfoMapper diskInfoMapper;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+    /**
+     * IpIdMap的redisKey
+     */
+    private static final String IP_ID_KEY = "host:ip_id";
 
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
@@ -45,18 +52,33 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
 
     @Override
     public Map<String, Integer> getIp2IdMap(Collection<String> ipList) {
-        Set<String> ipSet = new HashSet<>(ipList);
-        List<HostInfo> hostInfoList = hostInfoMapper.selectList(new LambdaQueryWrapper<HostInfo>().in(HostInfo::getIp, ipSet).select(HostInfo::getId, HostInfo::getIp));
-        // ip对应主机id的map
-        Map<String, Integer> ip2IdMap = hostInfoList.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getId));
-        // 有ip没查到对应主机id
-        if (ip2IdMap.keySet().size() != ipSet.size()) {
-            Set<String> differenceSet = new HashSet<>(ipList);
-            differenceSet.removeAll(ip2IdMap.keySet());
-            log.warn("有ip没查询到对应的主机id信息，ip为：{}", differenceSet);
-            throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+        Object ipIdrMapObject = redisTemplate.opsForValue().get(IP_ID_KEY);
+        // 缓存中没有，去数据库中查
+        if (ipIdrMapObject == null) {
+            log.info("没有在redis中获取到ip2IdMap");
+            Set<String> ipSet = new HashSet<>(ipList);
+            List<HostInfo> hostInfoList = hostInfoMapper.selectList(new LambdaQueryWrapper<HostInfo>().in(HostInfo::getIp, ipSet).select(HostInfo::getId, HostInfo::getIp));
+            // ip对应主机id的map
+            Map<String, Integer> ip2IdMap = hostInfoList.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getId));
+            // 有ip没查到对应主机id
+            if (ip2IdMap.keySet().size() != ipSet.size()) {
+                Set<String> differenceSet = new HashSet<>(ipList);
+                differenceSet.removeAll(ip2IdMap.keySet());
+                log.warn("有ip没查询到对应的主机id信息，ip为：{}", differenceSet);
+                throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+            }
+            redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap);
+            log.info("ip2idMap已刷新");
+            return ip2IdMap;
+        } else {
+            // 有缓存则直接返回
+            if (ipIdrMapObject instanceof Map) {
+                return (Map<String, Integer>) ipIdrMapObject;
+            } else {
+                log.error("ip2idMap在从redis中获取时类型出错");
+                throw new BusinessException(CodeMsg.SYSTEM_ERROR, "ip2idMap在从redis中获取时类型出错");
+            }
         }
-        return ip2IdMap;
     }
 
     @Override

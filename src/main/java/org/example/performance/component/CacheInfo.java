@@ -1,11 +1,13 @@
 package org.example.performance.component;
 
+import cn.hutool.core.util.ObjectUtil;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.service.ContainerInfoService;
+import org.example.performance.service.HostInfoService;
 import org.springframework.context.annotation.Scope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
@@ -30,13 +32,34 @@ public class CacheInfo {
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private ContainerInfoService containerInfoService;
-
+    @Resource
+    private HostInfoService hostInfoService;
 
     private static final String IP_CONTAINER_KEY = "container:ip_container";
+    private static final String IP_ID_KEY = "host:ip_id";
 
     @Getter
     @Setter
     private List<String> ipList;
+
+    private Map<String, Integer> ip2idMap;
+
+    public Map<String, Integer> getIp2idMap() {
+        Object ipIdrMapObject = redisTemplate.opsForValue().get(IP_ID_KEY);
+        if (ipIdrMapObject == null) {
+            log.info("没有在redis中获取到ip2IdMap");
+            return hostInfoService.getIp2IdMap(ipList);
+        }
+        if (ObjectUtil.isEmpty(ip2idMap)) {
+            ip2idMap = hostInfoService.getIp2IdMap(ipList);
+        }
+        return ip2idMap;
+    }
+
+    public void setIp2idMap(Map<String, Integer> ip2idMap) {
+        this.ip2idMap = ip2idMap;
+    }
+
 
     private CacheInfo() {
 
