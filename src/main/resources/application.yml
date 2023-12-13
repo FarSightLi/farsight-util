@@ -1,6 +1,3 @@
-ipList:
-  192.168.1.167,192.168.32.128
-
 jwt:
   secret: pKRpxJKnd5Aj0FCZ8g9q7nZO+BVx1pceq/kbv+wvHaGmePjA9CWB6GQIZ+84EK7ErKwnlrKNmHV/WTnoQiFXmA== #JWT加解密使用的密钥
 spring:

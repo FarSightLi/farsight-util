@@ -8,7 +8,6 @@ import org.example.performance.config.SessionConfig;
 import org.example.performance.config.ThreadPoolConfig;
 import org.example.performance.pojo.po.*;
 import org.example.performance.service.*;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
@@ -25,9 +24,6 @@ import java.util.stream.Collectors;
 @Slf4j
 @DependsOn("hostXmlScheduledTask")
 public class MetricsScheduledTask {
-    @Value("#{'${ipList}'.split(',')}")
-    private List<String> ipList = new ArrayList<>();
-
     private final InfoService infoService = new InfoService();
     @Resource
     private HostInfoService hostInfoService;
@@ -41,8 +37,6 @@ public class MetricsScheduledTask {
     private ContainerMetricsService containerMetricsService;
     @Resource
     private HostXmlScheduledTask hostXmlScheduledTask;
-    @Resource
-    private CacheInfo cacheInfo;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
 
@@ -67,7 +61,7 @@ public class MetricsScheduledTask {
         List<HostInfo> hostInfoList = Collections.synchronizedList(new ArrayList<>());
 
         // 主机信息采集
-        ipList.forEach(ip -> {
+        CacheInfo.getIpList().forEach(ip -> {
                     CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                         HostInfo hostInfo = infoService.getSysInfo(SessionConfig.getSession(ip), ip);
                         hostInfoList.add(hostInfo);
@@ -121,7 +115,7 @@ public class MetricsScheduledTask {
         List<HostMetrics> hostMetricsList = Collections.synchronizedList(new ArrayList<>());
         List<DiskInfo> diskInfoList = Collections.synchronizedList(new ArrayList<>());
         // 主机性能采集
-        ipList.forEach(ip -> {
+        CacheInfo.getIpList().forEach(ip -> {
                     CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                         HostMetrics hostMetrics = infoService.getSysIndex(SessionConfig.getSession(ip), ip);
                         hostMetricsList.add(hostMetrics);
@@ -163,7 +157,7 @@ public class MetricsScheduledTask {
         Object containerMapObject = redisTemplate.opsForValue().get(IP_CONTAINER_KEY);
         if (containerMapObject == null) {
             log.info("没有获得ip2ContainerMap缓存信息，查询数据库");
-            return containerInfoService.getContainerId(ipList);
+            return containerInfoService.getContainerId(CacheInfo.getIpList());
         }
         if (containerMapObject instanceof HashMap) {
             return (HashMap<String, List<String>>) containerMapObject;

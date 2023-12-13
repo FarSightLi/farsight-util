@@ -9,8 +9,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
-import javax.annotation.Resource;
 import javax.xml.xpath.XPathConstants;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,9 +29,6 @@ import java.util.stream.Collectors;
 @Slf4j
 public class HostXmlScheduledTask {
     private static final ConcurrentHashMap<String, List<String>> HOST_MAP = new ConcurrentHashMap<>();
-
-    @Resource
-    private CacheInfo cacheInfo;
 
     @Scheduled(fixedRate = 30 * 60 * 1000) // 30min
     public void readXml() {
@@ -52,7 +49,7 @@ public class HostXmlScheduledTask {
             HOST_MAP.put(infoList.get(0), infoList);
         }
         log.info("主机账号密码信息读取完毕");
-        cacheInfo.setIpList(HOST_MAP.keySet().getMappedValue());
+        CacheInfo.setIpList(new ArrayList<>(HOST_MAP.keySet()));
         log.info("ipList刷新完毕");
     }
 }

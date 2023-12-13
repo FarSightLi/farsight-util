@@ -1,6 +1,9 @@
 package org.example.performance.component;
 
+import cn.hutool.core.util.ObjectUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
@@ -21,11 +24,15 @@ public class CacheInfo {
     private static List<String> IP_LIST;
 
     public static List<String> getIpList() {
+        if (ObjectUtil.isEmpty(IP_LIST)) {
+            log.error("ipList为null");
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+        }
         return IP_LIST;
     }
 
-    public static void setIpList(List<String> ipList) {
-        ipList = ipList;
+    public static void setIpList(List<String> newIpList) {
+        IP_LIST = newIpList;
     }
 
     private CacheInfo() {
