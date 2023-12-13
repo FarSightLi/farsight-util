@@ -2,22 +2,22 @@ package org.example.performance.component.scheduled;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.CacheInfo;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.config.SessionConfig;
 import org.example.performance.config.ThreadPoolConfig;
 import org.example.performance.pojo.po.*;
 import org.example.performance.service.*;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.DependsOn;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
@@ -43,6 +43,13 @@ public class MetricsScheduledTask {
     private HostXmlScheduledTask hostXmlScheduledTask;
     @Resource
     private CacheInfo cacheInfo;
+    @Resource
+    private RedisTemplate<String, Object> redisTemplate;
+
+    /**
+     * ip对应容器map的redis的key
+     */
+    private static final String IP_CONTAINER_KEY = "container:ip_container";
 
     @PostConstruct
     public void init() {
@@ -77,7 +84,7 @@ public class MetricsScheduledTask {
         List<ContainerInfo> containerList = getContainerList(hostInfoList);
         containerInfoService.updateOrInsertContainer(containerList);
         // 保存ip和容器id对应关系到缓存
-        cacheInfo.updateCache(containerList
+        updateCache(containerList
                 .stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList()))));
         log.info("所有主机采集完毕");
     }
@@ -153,15 +160,27 @@ public class MetricsScheduledTask {
     }
 
     private Map<String, List<String>> getContainerMap() {
-        Map<String, List<String>> containerMap;
-        if (cacheInfo.getContainerMap().isEmpty()) {
-            containerMap = containerInfoService.getContainerId(ipList);
-            log.info("缓存没有容器信息，查了数据库");
-        } else {
-            containerMap = cacheInfo.getContainerMap();
-            log.info("用的缓存信息");
+        Object containerMapObject = redisTemplate.opsForValue().get(IP_CONTAINER_KEY);
+        if (containerMapObject == null) {
+            log.info("没有获得ip2ContainerMap缓存信息，查询数据库");
+            return containerInfoService.getContainerId(ipList);
         }
-        return containerMap;
+        if (containerMapObject instanceof HashMap) {
+            return (HashMap<String, List<String>>) containerMapObject;
+        } else {
+            // 可以选择抛出异常或返回一个默认值
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "ip2ContainerMap在从redis中获取时类型出错");
+        }
+    }
+
+    /**
+     * 更新ip对应容器信息缓存
+     *
+     * @param newData
+     */
+    public void updateCache(Map<String, List<String>> newData) {
+        redisTemplate.opsForValue().set(IP_CONTAINER_KEY, newData);
+        log.info("ip对应容器信息缓存已更新");
     }
 
     private List<ContainerInfo> getContainerList(List<HostInfo> hostInfoList) {
