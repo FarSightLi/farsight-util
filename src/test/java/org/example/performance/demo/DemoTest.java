@@ -1,13 +1,26 @@
 package org.example.performance.demo;
 
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.XmlUtil;
+import lombok.extern.slf4j.Slf4j;
+import org.example.performance.mapper.HostMetricsMapper;
+import org.example.performance.pojo.po.HostMetrics;
+import org.example.performance.service.HostInfoService;
+import org.example.performance.service.HostMetricsService;
 import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
+import javax.annotation.Resource;
 import javax.xml.xpath.XPathConstants;
 import java.math.BigDecimal;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * @author lilongsheng
@@ -16,7 +29,16 @@ import java.math.BigDecimal;
  * @description 随意测试
  * @date 2023/12/8 09:17:35
  */
+@Slf4j
+@SpringBootTest
 public class DemoTest {
+    @Resource
+    private HostInfoService hostInfoService;
+    @Resource
+    private HostMetricsService hostMetricsService;
+    @Resource
+    private HostMetricsMapper metricsMapper;
+
     @Test
     public void test1() {
         BigDecimal bigDecimal = BigDecimal.valueOf(0.00);
@@ -35,5 +57,43 @@ public class DemoTest {
             String value = node.getTextContent().trim();
         }
 
+    }
+
+    @Test
+    public void testTimeInterval() {
+        String ip = "192.168.1.167";
+        LocalDateTime startTime = LocalDateTime.of(2023, 12, 11, 11, 12);
+        LocalDateTime endTime = LocalDateTime.of(2023, 12, 12, 12, 12);
+        List<String> ipList = new ArrayList<>();
+        ipList.add(ip);
+        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
+        List<HostMetrics> hostMetricsList = metricsMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
+        if (ObjectUtil.isEmpty(hostMetricsList)) {
+            log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
+        }
+
+        Duration between = Duration.between(startTime, endTime);
+        log.info("day:{},hour:{},min:{}", between.toDays(), between.toHours(), between.toMinutes());
+        if (between.toDays() >= 1) {
+            System.out.println("几天");
+        } else if (between.toHours() >= 12) {
+            System.out.println("几小时");
+        } else {
+            System.out.println("几分钟");
+        }
+
+        // 指定时间间隔（秒）
+        int timeIntervalInSeconds = 3600; // 一小时
+        Map<Long, List<HostMetrics>> hourlyMetricsMap = hostMetricsList.stream()
+                .collect(Collectors.groupingBy(
+                        metrics -> metrics.getUpdateTime().atZone(ZoneId.systemDefault()).toEpochSecond() / 3600
+                ));
+        List<HostMetrics> collect = hourlyMetricsMap.values().stream()
+                .map(metricsList -> metricsList.stream()
+                        .max(Comparator.comparing(HostMetrics::getUpdateTime))
+                        .orElse(null)
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }

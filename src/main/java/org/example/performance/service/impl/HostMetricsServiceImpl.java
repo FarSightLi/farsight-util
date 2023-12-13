@@ -15,7 +15,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
+import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,7 +48,6 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
 
     @Override
     public List<HostMetricsVO> getMetricsVO(String ip, LocalDateTime startTime, LocalDateTime endTime) {
-        // TODO 可以针对时间间隔做优化
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
         Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
@@ -55,8 +56,22 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
             return Collections.emptyList();
         }
+        // 指定时间间隔（秒）
+        int timeIntervalInSeconds;
+        Duration between = Duration.between(startTime, endTime);
+        if (between.toDays() >= 1) {
+            timeIntervalInSeconds = 60 * 60;
+        } else if (between.toHours() >= 12) {
+            timeIntervalInSeconds = 60;
+        } else {
+            timeIntervalInSeconds = 1;
+        }
+
+        // 根据时间间隔过滤后的性能指标列表
+        List<HostMetrics> filterHostMetricsList = filterListByTime(hostMetricsList, timeIntervalInSeconds);
+
         // 时间对应的性能信息map(极小概率会出现同一时间有多条性能数据)
-        Map<LocalDateTime, HostMetrics> map = hostMetricsList.stream()
+        Map<LocalDateTime, HostMetrics> map = filterHostMetricsList.stream()
                 .collect(Collectors.toMap(HostMetrics::getUpdateTime, Function.identity(), (old, replace) -> replace));
         List<AlertRule> alertRuleList = alertRuleService.list();
         // 告警信息map
@@ -115,6 +130,20 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
             }
         }
         return vo;
+    }
+
+    private List<HostMetrics> filterListByTime(List<HostMetrics> oldList, int timeIntervalInSeconds) {
+        Map<Long, List<HostMetrics>> hourlyMetricsMap = oldList.stream()
+                .collect(Collectors.groupingBy(
+                        metrics -> metrics.getUpdateTime().atZone(ZoneOffset.ofHours(8)).toEpochSecond() / timeIntervalInSeconds
+                ));
+        return hourlyMetricsMap.values().stream()
+                .map(metricsList -> metricsList.stream()
+                        .max(Comparator.comparing(HostMetrics::getUpdateTime))
+                        .orElse(null)
+                )
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
     }
 }
 
