@@ -6,6 +6,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.pojo.po.*;
 import org.example.performance.util.DataUtil;
 
@@ -148,6 +150,9 @@ public class InfoService {
 
 
     private String execCmd(Session session, String cmd) {
+        if (session == null) {
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "session为空了");
+        }
         return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8).trim();
     }
 

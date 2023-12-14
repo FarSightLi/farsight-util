@@ -11,13 +11,12 @@ import org.example.performance.pojo.vo.HostMetricsVO;
 import org.example.performance.service.AlertRuleService;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.service.HostMetricsService;
+import org.example.performance.util.MyUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.math.BigDecimal;
-import java.time.Duration;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -56,19 +55,10 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
             return Collections.emptyList();
         }
-        // 指定时间间隔（秒）
-        int timeIntervalInSeconds;
-        Duration between = Duration.between(startTime, endTime);
-        if (between.toDays() >= 1) {
-            timeIntervalInSeconds = 60 * 60;
-        } else if (between.toHours() >= 12) {
-            timeIntervalInSeconds = 60;
-        } else {
-            timeIntervalInSeconds = 1;
-        }
 
+        Integer interval = MyUtil.getInterval(startTime, endTime);
         // 根据时间间隔过滤后的性能指标列表
-        List<HostMetrics> filterHostMetricsList = filterListByTime(hostMetricsList, timeIntervalInSeconds);
+        List<HostMetrics> filterHostMetricsList = MyUtil.filterListByTime(hostMetricsList, interval);
 
         // 时间对应的性能信息map(极小概率会出现同一时间有多条性能数据)
         Map<LocalDateTime, HostMetrics> map = filterHostMetricsList.stream()
@@ -130,27 +120,6 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
             }
         }
         return vo;
-    }
-
-    /**
-     * 根据时间间隔获得每个区间内最新的数据，排序后进行返回
-     *
-     * @param oldList               未筛选前的列表
-     * @param timeIntervalInSeconds 时间间隔（以秒为单位）
-     * @return 分割后的列表
-     */
-    private List<HostMetrics> filterListByTime(List<HostMetrics> oldList, int timeIntervalInSeconds) {
-        Map<Long, List<HostMetrics>> hourlyMetricsMap = oldList.stream()
-                .collect(Collectors.groupingBy(
-                        metrics -> metrics.getUpdateTime().atZone(ZoneOffset.ofHours(8)).toEpochSecond() / timeIntervalInSeconds
-                ));
-        return hourlyMetricsMap.values().stream()
-                .map(metricsList -> metricsList.stream()
-                        .max(Comparator.comparing(HostMetrics::getUpdateTime))
-                        .orElse(null)
-                )
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
     }
 }
 

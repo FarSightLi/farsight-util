@@ -17,6 +17,7 @@ import org.example.performance.service.ContainerInfoService;
 import org.example.performance.service.ContainerMetricsService;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.util.DataUtil;
+import org.example.performance.util.MyUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -109,32 +110,32 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         List<ContainerTrendVO> voList = new ArrayList<>();
         Map<String, AlertRule> ruleMap = alertRuleService.list().stream().collect(Collectors.toMap(AlertRule::getMetricName, Function.identity()));
         containerInfoList.forEach(info -> {
-            voList.add(getContainerTrendVO(ContainerTrendVO.Type.MEM, ruleMap, info, metricsList));
-            voList.add(getContainerTrendVO(ContainerTrendVO.Type.DISK, ruleMap, info, metricsList));
-            voList.add(getContainerTrendVO(ContainerTrendVO.Type.CPU, ruleMap, info, metricsList));
-            voList.add(getContainerTrendVO(ContainerTrendVO.Type.MEM_RATE, ruleMap, info, metricsList));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM, ruleMap, info, metricsList));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.DISK, ruleMap, info, metricsList));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.CPU, ruleMap, info, metricsList));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM_RATE, ruleMap, info, metricsList));
 
         });
 
         return voList;
     }
 
-    private ContainerTrendVO getContainerTrendVO(ContainerTrendVO.Type type,
+    private ContainerTrendVO getContainerTrendVO(ContainerMetrics.Type type,
                                                  Map<String, AlertRule> ruleMap,
                                                  ContainerInfo info,
                                                  List<ContainerMetrics> metricsList) {
         String desc = "";
         String name = "";
         String ruleKey = "";
-        if (type.equals(ContainerTrendVO.Type.CPU)) {
+        if (type.equals(ContainerMetrics.Type.CPU)) {
             desc = "容器CPU使用率(相对于limit，%)";
             name = "cpu";
             ruleKey = "container.cpu.rate";
-        } else if (type.equals(ContainerTrendVO.Type.MEM)) {
+        } else if (type.equals(ContainerMetrics.Type.MEM)) {
             desc = "容器内存使用量(MB)";
             name = "mem";
             ruleKey = "container.mem.sum";
-        } else if (type.equals(ContainerTrendVO.Type.DISK)) {
+        } else if (type.equals(ContainerMetrics.Type.DISK)) {
             desc = "容器磁盘使用量(MB)";
             name = "disk";
             ruleKey = "container.disk.sum";
@@ -269,6 +270,7 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
      * @return List<Object> 0号位是容器信息，1号位是容器性能
      */
     private List<Object> getInfoAndMetricsList(String ip, LocalDateTime startTime, LocalDateTime endTime) {
+        Integer interval = MyUtil.getInterval(startTime, endTime);
         List<String> ips = new ArrayList<>();
         ips.add(ip);
         Map<String, List<String>> ipContainerMap = containerInfoService.getContainerId(ips);
@@ -279,58 +281,68 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         }
         List<ContainerInfo> containerInfoList = containerInfoService.getListByContainerIdList(containerIdList);
         List<ContainerMetrics> metricsList = baseMapper.getByContainerIdList(containerIdList, startTime, endTime);
+        // 根据时间间隔筛选数据
+        List<ContainerMetrics> newMetricsList = MyUtil.filterListByTime(metricsList, interval);
         List<Object> objects = new ArrayList<>();
         objects.add(containerInfoList);
-        objects.add(metricsList);
+        objects.add(newMetricsList);
         return objects;
     }
 
 
     private ContainerTrendVO.MetricValue getMetricValueList(List<ContainerMetrics> metricsList,
-                                                            ContainerTrendVO.Type type, BigDecimal memSize) {
+                                                            ContainerMetrics.Type type, BigDecimal memSize) {
         ContainerTrendVO.MetricValue metricValue = new ContainerTrendVO.MetricValue();
         List<Object> list = new ArrayList<>();
-        if (type.equals(ContainerTrendVO.Type.MEM)) {
-            metricsList.forEach(e -> {
-                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-                if (e.getMemUsedSize() == null || memSize == null) {
-                    log.error("容器性能记录MemUsedSize为null，记录id为{}", e.getId());
-                } else {
-                    list.add(e.getMemUsedSize());
-                }
-                metricValue.setValue(list);
-            });
-        } else if (type.equals(ContainerTrendVO.Type.CPU)) {
-            metricsList.forEach(e -> {
-                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-                if (e.getCpuRate() == null || memSize == null) {
-                    log.error("容器性能记录CpuRate为null，记录id为{}", e.getId());
-                } else {
-                    list.add(e.getCpuRate());
-                }
-                metricValue.setValue(list);
-            });
-        } else if (type.equals(ContainerTrendVO.Type.DISK)) {
-            metricsList.forEach(e -> {
-                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-                if (e.getDiskUsedSize() == null || memSize == null) {
-                    log.error("容器性能记录MemUsedSize为null，记录id为{}", e.getId());
-                } else {
-                    list.add(e.getDiskUsedSize());
-                }
-                metricValue.setValue(list);
-            });
-        } else {
-            metricsList.forEach(e -> {
-                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-                if (e.getMemUsedSize() == null || memSize == null) {
-                    log.error("容器性能记录MemUsedSize或MemSize为null，记录id为{}", e.getId());
-                } else {
-                    list.add(e.getMemUsedSize().divide(memSize, 1, RoundingMode.HALF_UP));
-                }
-                metricValue.setValue(list);
-            });
-        }
+        metricsList.forEach(e -> {
+            list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
+            BigDecimal value = e.getValue(type, memSize);
+            if (value == null) {
+                log.error("容器性能记录{}为null，记录id为{}", type, e.getId());
+            } else {
+                list.add(e.getMemUsedSize());
+            }
+            metricValue.setValue(list);
+        });
+//        if (type.equals(ContainerMetrics.Type.MEM)) {
+//            metricsList.forEach(e -> {
+//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
+//                if (e.getMemUsedSize() == null || memSize == null) {
+//
+//                }
+//                metricValue.setValue(list);
+//            });
+//        } else if (type.equals(ContainerMetrics.Type.CPU)) {
+//            metricsList.forEach(e -> {
+//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
+//                if (e.getCpuRate() == null || memSize == null) {
+//                    log.error("容器性能记录CpuRate为null，记录id为{}", e.getId());
+//                } else {
+//                    list.add(e.getCpuRate());
+//                }
+//                metricValue.setValue(list);
+//            });
+//        } else if (type.equals(ContainerMetrics.Type.DISK)) {
+//            metricsList.forEach(e -> {
+//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
+//                if (e.getDiskUsedSize() == null || memSize == null) {
+//                    log.error("容器性能记录MemUsedSize为null，记录id为{}", e.getId());
+//                } else {
+//                    list.add(e.getDiskUsedSize());
+//                }
+//                metricValue.setValue(list);
+//            });
+//        } else {
+//            metricsList.forEach(e -> {
+//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
+//                if (e.getMemUsedSize() == null || memSize == null) {
+//                    log.error("容器性能记录MemUsedSize或MemSize为null，记录id为{}", e.getId());
+//                } else {
+//                    list.add(e.getMemUsedSize().divide(memSize, 1, RoundingMode.HALF_UP));
+//                }
+//                metricValue.setValue(list);
+//            });
+//        }
         return metricValue;
     }
 }

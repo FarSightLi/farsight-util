@@ -14,13 +14,6 @@ import java.util.List;
  */
 @Data
 public class ContainerTrendVO {
-    public enum Type {
-        CPU,
-        MEM,
-        MEM_RATE,
-        DISK
-    }
-
     private List<MetricDataEntry> list;
     private String metricDesc;
     private String metricName;

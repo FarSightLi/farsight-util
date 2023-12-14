@@ -8,6 +8,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.HasUpdateTime;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 
@@ -24,7 +25,7 @@ import java.util.List;
 @TableName(value = "host_metrics")
 @Data
 @Slf4j
-public class HostMetrics implements Serializable {
+public class HostMetrics implements Serializable, HasUpdateTime {
 
     public enum Type {
         MEM, BYTIN, LOAD, CPU, DISK, TCP, MEM_RATE, IO, INODE, BYOUT

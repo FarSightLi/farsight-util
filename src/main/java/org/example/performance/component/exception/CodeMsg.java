@@ -6,7 +6,7 @@ public enum CodeMsg {
     TOKEN_ERROR(5000, "Token错误"),
     SYSTEM_ERROR(10001, "系统错误"),
     DATABASE_ERROR(10002, "数据库错误"),
-    PARAMETER_ERROR(10008, "参数错误，请参考API文档");
+    PARAMETER_ERROR(10008, "参数错误");
 
     private int code;
     private String codeRemark;
