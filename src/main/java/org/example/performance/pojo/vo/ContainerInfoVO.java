@@ -30,28 +30,104 @@ public class ContainerInfoVO extends ContainerInfo {
         CPU,
         DISK
     }
+
+    /**
+     * 最大CPU使用率（%）
+     */
     private BigDecimal maxCpuRate;
+
+    /**
+     * 最大CPU使用数（两位小数）
+     */
     private BigDecimal maxCpuUsage;
+
+    /**
+     * 最大磁盘使用量（MB）
+     */
     private BigDecimal maxDiskUsage;
+
+    /**
+     * 最大磁盘使用率（%）
+     */
     private BigDecimal maxDiskUsedRate;
+
+    /**
+     * 最大内存使用量（MB）
+     */
     private BigDecimal maxMemUsage;
+
+    /**
+     * 最大内存使用比（%）
+     */
     private BigDecimal maxMemUsedRate;
+
+    /**
+     * 平均CPU使用量（两位小数）
+     */
     private BigDecimal avgCpuUsage;
+
+    /**
+     * 平均CPU使用率（%）
+     */
     private BigDecimal avgCpuRate;
+
+    /**
+     * 平均磁盘使用量（MB）
+     */
     private BigDecimal avgDiskUsage;
+
+    /**
+     * 平均磁盘使用率（%）
+     */
     private BigDecimal avgDiskRate;
+
+    /**
+     * 平均内存使用量（MB）
+     */
     private BigDecimal avgMemUsage;
+
+    /**
+     * 平均内存使用率（%）
+     */
     private BigDecimal avgMemRate;
+
+    /**
+     * 最大磁盘使用状态（0:正常 1:警告 2:严重报警）
+     */
     private Integer maxDiskUsedState;
+
+    /**
+     * 最大CPU使用状态（0:正常 1:警告 2:严重报警）
+     */
     private Integer maxCpuState;
+
+    /**
+     * 最大内存使用状态（0:正常 1:警告 2:严重报警）
+     */
     private Integer maxMemUsedState;
+
+    /**
+     * 平均内存使用状态（0:正常 1:警告 2:严重报警）
+     */
     private Integer avgMemUsedState;
+
+    /**
+     * 平均CPU使用状态（0:正常 1:警告 2:严重报警）
+     */
     private Integer avgCpuState;
+
+    /**
+     * 平均磁盘使用状态（0:正常 1:警告 2:严重报警）
+     */
     private Integer avgDiskUsedState;
+
+    /**
+     * 在线时长（单位：毫秒）
+     */
     private Long onlineTime;
 
     /**
-     * CPU使用率
+     * CPU使用率（%）
      */
     private BigDecimal cpuRate;
 

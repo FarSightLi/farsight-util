@@ -14,23 +14,50 @@ import java.time.LocalDateTime;
  */
 @Data
 public class HostMetricsVO {
+    /**
+     * 指标描述
+     */
     private String desc;
 
+    /**
+     * 指标名字如host.mem.sum
+     */
     private String name;
 
+    /**
+     * 指标状态 1正常 2警告 3严重报警
+     */
     private Integer state;
 
+    /**
+     * 指标type如mem
+     */
     private String type;
 
+    /**
+     * 指标值
+     */
     private BigDecimal value;
 
+    /**
+     * 最大值（目前尚未用到）
+     */
     private BigDecimal maxValue;
 
+    /**
+     * 警告阈值
+     */
     private BigDecimal triggerWarnLimit;
 
+    /**
+     * 严重报警阈值
+     */
     private BigDecimal triggerErrorLimit;
 
 
+    /**
+     * 检测时间
+     */
     private LocalDateTime monitorTime;
 
 }

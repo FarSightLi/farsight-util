@@ -1,8 +1,8 @@
 package org.example.performance.controller;
 
 import cn.hutool.jwt.JWTUtil;
+import org.example.performance.component.Result;
 import org.example.performance.component.aop.NotIdentify;
-import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -33,12 +33,12 @@ public class SecurityController {
      * @return
      */
     @GetMapping("/getToken/{userName}")
-    public String getToken(@PathVariable String userName) {
+    public Result<String> getToken(@PathVariable String userName) {
         if ("admin".equals(userName)) {
             HashMap<String, Object> payloadMap = new HashMap<>(0);
-            return JWTUtil.createToken(payloadMap, secret.getBytes());
+            return Result.success(JWTUtil.createToken(payloadMap, secret.getBytes()));
         } else {
-            throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+            return Result.error(CodeMsg.PARAMETER_ERROR, "账号不对");
         }
     }
 }

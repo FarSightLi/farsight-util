@@ -3,6 +3,8 @@ package org.example.performance.pojo.dto;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.Data;
 
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
 /**
@@ -14,9 +16,26 @@ import java.time.LocalDateTime;
  */
 @Data
 public class InfoDTO {
+    /**
+     * ip
+     */
+    @NotNull
+    @NotBlank
     private String ip;
+
+    /**
+     * 开始时间
+     */
+    @NotNull
+    @NotBlank
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime startTime;
+
+    /**
+     * 结束时间
+     */
+    @NotNull
+    @NotBlank
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime endTime;
 }

@@ -15,6 +15,9 @@ import java.util.List;
  */
 @Data
 public class HostInfoVO extends HostInfo {
+    /**
+     * 磁盘具体信息
+     */
     private DiskInfoVO diskInfoVO;
 
     @Override
