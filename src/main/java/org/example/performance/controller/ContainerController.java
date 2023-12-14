@@ -1,16 +1,19 @@
 package org.example.performance.controller;
 
 import org.example.performance.component.Result;
+import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.pojo.dto.InfoDTO;
 import org.example.performance.pojo.vo.ContainerInfoVO;
 import org.example.performance.pojo.vo.ContainerTrendVO;
 import org.example.performance.service.ContainerMetricsService;
+import org.example.performance.util.MyUtil;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -33,7 +36,14 @@ public class ContainerController {
      */
     @PostMapping("/metric")
     public Result<List<ContainerInfoVO>> getMetric(@RequestBody InfoDTO dto) {
-        return Result.success(containerMetricsService.getContainerMetricsByIp(dto.getIp(), dto.getStartTime(), dto.getEndTime()));
+        LocalDateTime startTime = dto.getStartTime();
+        LocalDateTime endTime = dto.getEndTime();
+        if (MyUtil.validTime(startTime, endTime)) {
+            return Result.error(CodeMsg.PARAMETER_ERROR, "时间间隔不正确");
+        } else {
+            return Result.success(containerMetricsService.getContainerMetricsByIp(dto.getIp(), startTime, endTime));
+        }
+
     }
 
     /**
@@ -44,6 +54,12 @@ public class ContainerController {
      */
     @PostMapping("/metricTrend")
     public Result<List<ContainerTrendVO>> metricTrend(@RequestBody InfoDTO dto) {
-        return Result.success(containerMetricsService.getMetricTrend(dto.getIp(), dto.getStartTime(), dto.getEndTime()));
+        LocalDateTime startTime = dto.getStartTime();
+        LocalDateTime endTime = dto.getEndTime();
+        if (MyUtil.validTime(startTime, endTime)) {
+            return Result.error(CodeMsg.PARAMETER_ERROR, "时间间隔不正确");
+        } else {
+            return Result.success(containerMetricsService.getMetricTrend(dto.getIp(), startTime, endTime));
+        }
     }
 }

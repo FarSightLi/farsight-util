@@ -57,4 +57,8 @@ public class MyUtil {
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
+
+    public static boolean validTime(LocalDateTime startTime, LocalDateTime endTime) {
+        return endTime.isBefore(startTime);
+    }
 }
