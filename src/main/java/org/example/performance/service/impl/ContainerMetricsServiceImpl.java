@@ -82,22 +82,26 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
             ContainerInfoVO vo = new ContainerInfoVO();
             // 所有历史数据
             List<ContainerMetrics> containerMetricsList = containerMetricsMap.get(containerInfo.getContainerId());
-            // 拿到最新的数据
-            ContainerMetrics containerMetrics = containerMetricsList.stream()
-                    .filter(Objects::nonNull)
-                    .max(Comparator.comparing(ContainerMetrics::getUpdateTime))
-                    .orElseThrow(() -> new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能指标数据有错"));
-            BeanUtils.copyProperties(containerMetrics, vo);
-            BeanUtils.copyProperties(containerInfo, vo);
-            // 计算三个指标的最大值及相关信息
-            getThreeMaxIndex(containerMetricsList, vo, containerInfo, finalHostCpuMap);
-            // 计算三个指标的平均值
-            getThreeAvgIndex(containerMetricsList, vo, containerInfo);
-            // 计算在线时长
-            vo.setOnlineTime(calculateDurationMillis(vo.getRestartTime()));
-            // 计算预警状态
-            calculateState(vo);
-            voList.add(vo);
+            if (ObjectUtil.isNotEmpty(containerMetricsList)) {
+                // 拿到最新的数据
+                ContainerMetrics containerMetrics = containerMetricsList.stream()
+                        .filter(Objects::nonNull)
+                        .max(Comparator.comparing(ContainerMetrics::getUpdateTime))
+                        .orElseThrow(() -> new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能指标数据有错"));
+                BeanUtils.copyProperties(containerMetrics, vo);
+                BeanUtils.copyProperties(containerInfo, vo);
+                // 计算三个指标的最大值及相关信息
+                getThreeMaxIndex(containerMetricsList, vo, containerInfo, finalHostCpuMap);
+                // 计算三个指标的平均值
+                getThreeAvgIndex(containerMetricsList, vo, containerInfo);
+                // 计算在线时长
+                vo.setOnlineTime(calculateDurationMillis(vo.getRestartTime()));
+                // 计算预警状态
+                calculateState(vo);
+                voList.add(vo);
+            } else {
+                log.warn("在{}到{}内主机{}没有{}的性能信息", startTime, endTime, ip, containerInfo.getContainerName());
+            }
         });
         return voList;
     }
@@ -107,16 +111,16 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
         List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
         List<ContainerMetrics> metricsList = (List<ContainerMetrics>) infoAndMetricsList.get(1);
+        Map<String, ContainerInfo> infoMap = containerInfoList.stream().collect(Collectors.toMap(ContainerInfo::getContainerId, Function.identity()));
+        Map<String, List<ContainerMetrics>> metricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetrics::getContainerId));
         List<ContainerTrendVO> voList = new ArrayList<>();
         Map<String, AlertRule> ruleMap = alertRuleService.list().stream().collect(Collectors.toMap(AlertRule::getMetricName, Function.identity()));
-        containerInfoList.forEach(info -> {
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM, ruleMap, info, metricsList));
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.DISK, ruleMap, info, metricsList));
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.CPU, ruleMap, info, metricsList));
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM_RATE, ruleMap, info, metricsList));
-
+        infoMap.forEach((id, info) -> {
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.DISK, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.CPU, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM_RATE, ruleMap, info, metricsMap.get(id)));
         });
-
         return voList;
     }
 
@@ -281,8 +285,12 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         }
         List<ContainerInfo> containerInfoList = containerInfoService.getListByContainerIdList(containerIdList);
         List<ContainerMetrics> metricsList = baseMapper.getByContainerIdList(containerIdList, startTime, endTime);
+        Map<String, List<ContainerMetrics>> groupByContainerId = metricsList.stream().collect(Collectors.groupingBy(ContainerMetrics::getContainerId));
+        List<ContainerMetrics> newMetricsList = new ArrayList<>();
         // 根据时间间隔筛选数据
-        List<ContainerMetrics> newMetricsList = MyUtil.filterListByTime(metricsList, interval);
+        groupByContainerId.forEach((k, v) -> {
+            newMetricsList.addAll(MyUtil.filterListByTime(v, interval));
+        });
         List<Object> objects = new ArrayList<>();
         objects.add(containerInfoList);
         objects.add(newMetricsList);
@@ -300,49 +308,10 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
             if (value == null) {
                 log.error("容器性能记录{}为null，记录id为{}", type, e.getId());
             } else {
-                list.add(e.getMemUsedSize());
+                list.add(value);
             }
             metricValue.setValue(list);
         });
-//        if (type.equals(ContainerMetrics.Type.MEM)) {
-//            metricsList.forEach(e -> {
-//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-//                if (e.getMemUsedSize() == null || memSize == null) {
-//
-//                }
-//                metricValue.setValue(list);
-//            });
-//        } else if (type.equals(ContainerMetrics.Type.CPU)) {
-//            metricsList.forEach(e -> {
-//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-//                if (e.getCpuRate() == null || memSize == null) {
-//                    log.error("容器性能记录CpuRate为null，记录id为{}", e.getId());
-//                } else {
-//                    list.add(e.getCpuRate());
-//                }
-//                metricValue.setValue(list);
-//            });
-//        } else if (type.equals(ContainerMetrics.Type.DISK)) {
-//            metricsList.forEach(e -> {
-//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-//                if (e.getDiskUsedSize() == null || memSize == null) {
-//                    log.error("容器性能记录MemUsedSize为null，记录id为{}", e.getId());
-//                } else {
-//                    list.add(e.getDiskUsedSize());
-//                }
-//                metricValue.setValue(list);
-//            });
-//        } else {
-//            metricsList.forEach(e -> {
-//                list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-//                if (e.getMemUsedSize() == null || memSize == null) {
-//                    log.error("容器性能记录MemUsedSize或MemSize为null，记录id为{}", e.getId());
-//                } else {
-//                    list.add(e.getMemUsedSize().divide(memSize, 1, RoundingMode.HALF_UP));
-//                }
-//                metricValue.setValue(list);
-//            });
-//        }
         return metricValue;
     }
 }

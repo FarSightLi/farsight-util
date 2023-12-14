@@ -25,12 +25,12 @@ public class MyUtil {
         // 指定时间间隔（秒）
         int timeIntervalInSeconds;
         Duration between = Duration.between(startTime, endTime);
-        if (between.toDays() >= 1) {
-            timeIntervalInSeconds = 60 * 60;
+        if (between.toDays() >= 7) {
+            timeIntervalInSeconds = 60 * 60 * 60;
         } else if (between.toHours() >= 12) {
-            timeIntervalInSeconds = 60;
+            timeIntervalInSeconds = 60 * 60;
         } else {
-            timeIntervalInSeconds = 1;
+            timeIntervalInSeconds = 60;
         }
         return timeIntervalInSeconds;
     }
