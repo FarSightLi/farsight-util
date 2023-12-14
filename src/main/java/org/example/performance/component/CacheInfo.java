@@ -21,18 +21,18 @@ import java.util.List;
 @Scope("singleton")
 public class CacheInfo {
 
-    private static List<String> IP_LIST;
+    private static List<String> ipList;
 
     public static List<String> getIpList() {
-        if (ObjectUtil.isEmpty(IP_LIST)) {
+        if (ObjectUtil.isEmpty(ipList)) {
             log.error("ipList为null");
             throw new BusinessException(CodeMsg.SYSTEM_ERROR);
         }
-        return IP_LIST;
+        return ipList;
     }
 
     public static void setIpList(List<String> newIpList) {
-        IP_LIST = newIpList;
+        ipList = newIpList;
     }
 
     private CacheInfo() {

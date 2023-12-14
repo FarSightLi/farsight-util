@@ -29,7 +29,7 @@ public class AlertRule implements Serializable {
     private String metricName;
 
     /**
-     *
+     * 指标描述
      */
     private String metricDesc;
 
