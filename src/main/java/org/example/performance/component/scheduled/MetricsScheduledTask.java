@@ -127,6 +127,7 @@ public class MetricsScheduledTask {
         sysFutures.forEach(CompletableFuture::join);
         log.info("主机性能指标:" + hostMetricsList);
         diskInfoService.saveDiskInfo(diskInfoList);
+        // TODO 更改实现方式
         hostMetricsService.insertBatch(hostMetricsList);
         log.info("所有主机性能采集完毕");
     }
@@ -149,6 +150,7 @@ public class MetricsScheduledTask {
         }));
         containerFutures.forEach(CompletableFuture::join);
         log.info("容器性能指标:" + containerMetricsList);
+        // TODO 更改实现方式
         containerMetricsService.insertBatch(containerMetricsList);
         log.info("所有容器性能指标采集完毕");
     }
@@ -162,7 +164,6 @@ public class MetricsScheduledTask {
         if (containerMapObject instanceof HashMap) {
             return (HashMap<String, List<String>>) containerMapObject;
         } else {
-            // 可以选择抛出异常或返回一个默认值
             throw new BusinessException(CodeMsg.SYSTEM_ERROR, "ip2ContainerMap在从redis中获取时类型出错");
         }
     }

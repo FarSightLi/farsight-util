@@ -63,7 +63,7 @@ public class DiskInfo implements Serializable {
     /**
      * 关联的主机id
      */
-    private Integer hostId;
+    private Long hostId;
 
     /**
      * 关联的主机ip

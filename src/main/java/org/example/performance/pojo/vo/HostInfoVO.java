@@ -22,7 +22,7 @@ public class HostInfoVO extends HostInfo {
 
     @Override
     @JsonIgnore
-    public Integer getId() {
+    public Long getId() {
         return super.getId();
     }
 

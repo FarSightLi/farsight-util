@@ -60,9 +60,9 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
         List<ContainerMetrics> metricsList = (List<ContainerMetrics>) infoAndMetricsList.get(1);
         // 获得容器CPU为零的主机id
-        Set<Integer> hostIdList = containerInfoList.stream().filter(containerInfo -> containerInfo.getCpus().compareTo(BigDecimal.ZERO) == 0).map(ContainerInfo::getHostId).collect(Collectors.toSet());
+        Set<Long> hostIdList = containerInfoList.stream().filter(containerInfo -> containerInfo.getCpus().compareTo(BigDecimal.ZERO) == 0).map(ContainerInfo::getHostId).collect(Collectors.toSet());
         // 主机id对应cpu数的map
-        Map<Integer, Integer> hostCpuMap = new HashMap<>();
+        Map<Long, Integer> hostCpuMap = new HashMap<>();
         if (ObjectUtil.isNotEmpty(hostIdList)) {
             List<HostInfo> hostInfoList = hostInfoService.lambdaQuery().in(HostInfo::getId, hostIdList).select(HostInfo::getCpuCores, HostInfo::getId).list();
             if (ObjectUtil.isNotEmpty(hostInfoList)) {
@@ -77,7 +77,7 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         Map<String, List<ContainerMetrics>> containerMetricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetrics::getContainerId));
         List<ContainerInfoVO> voList = new ArrayList<>();
         // 提供给Lambda使用
-        Map<Integer, Integer> finalHostCpuMap = hostCpuMap;
+        Map<Long, Integer> finalHostCpuMap = hostCpuMap;
         containerInfoList.forEach(containerInfo -> {
             ContainerInfoVO vo = new ContainerInfoVO();
             // 所有历史数据
@@ -164,7 +164,7 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         return vo;
     }
 
-    private void getThreeMaxIndex(List<ContainerMetrics> containerMetricsList, ContainerInfoVO vo, ContainerInfo containerInfo, Map<Integer, Integer> hostCpuMap) {
+    private void getThreeMaxIndex(List<ContainerMetrics> containerMetricsList, ContainerInfoVO vo, ContainerInfo containerInfo, Map<Long, Integer> hostCpuMap) {
         BigDecimal maxCpuRate = containerMetricsList.stream()
                 .filter(containerMetrics -> containerMetrics.getCpuRate() != null)
                 .max(Comparator.comparing(ContainerMetrics::getCpuRate))

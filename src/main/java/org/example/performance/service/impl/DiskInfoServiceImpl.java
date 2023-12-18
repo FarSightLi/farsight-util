@@ -32,7 +32,7 @@ public class DiskInfoServiceImpl extends ServiceImpl<DiskInfoMapper, DiskInfo>
         // ip对应磁盘信息的map
         Map<String, List<DiskInfo>> diskInfoMap = diskInfoList.stream().collect(Collectors.groupingBy(DiskInfo::getHostIp));
         Set<String> ipSet = diskInfoMap.keySet();
-        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(ipSet);
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipSet);
         // 这样能保证一组数据的更新时间一定是相同的
         LocalDateTime now = LocalDateTime.now();
         List<DiskInfo> saveDiskList = diskInfoList.stream().map(diskInfo -> {

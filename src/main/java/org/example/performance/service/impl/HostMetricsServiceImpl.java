@@ -37,7 +37,7 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
 
     @Override
     public void insertBatch(List<HostMetrics> hostMetricsList) {
-        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(hostMetricsList.stream().map(HostMetrics::getHostIp).collect(Collectors.toList()));
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(hostMetricsList.stream().map(HostMetrics::getHostIp).collect(Collectors.toList()));
         hostMetricsList.forEach(hostMetrics -> {
             hostMetrics.setHostId(ip2IdMap.get(hostMetrics.getHostIp()));
             hostMetrics.setUpdateTime(LocalDateTime.now());
@@ -49,7 +49,7 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
     public List<HostMetricsVO> getMetricsVO(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
-        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
         List<HostMetrics> hostMetricsList = baseMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
         if (ObjectUtil.isEmpty(hostMetricsList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);

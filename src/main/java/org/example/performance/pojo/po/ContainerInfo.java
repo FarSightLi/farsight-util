@@ -22,7 +22,7 @@ public class ContainerInfo implements Serializable {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     private Integer id;
 
     /**
@@ -38,7 +38,7 @@ public class ContainerInfo implements Serializable {
     /**
      * 主机ID
      */
-    private Integer hostId;
+    private Long hostId;
 
     /**
      * 主机Ip

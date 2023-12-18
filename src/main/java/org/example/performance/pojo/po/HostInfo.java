@@ -24,8 +24,8 @@ public class HostInfo implements Serializable {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
-    private Integer id;
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long id;
 
     /**
      * CPU架构

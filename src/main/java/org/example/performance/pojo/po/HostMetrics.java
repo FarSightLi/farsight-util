@@ -40,7 +40,7 @@ public class HostMetrics implements Serializable, HasUpdateTime {
     /**
      * 主机ID
      */
-    private Integer hostId;
+    private Long hostId;
 
     /**
      * 主机Ip

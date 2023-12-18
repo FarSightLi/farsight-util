@@ -24,10 +24,11 @@
     </sql>
 
     <insert id="updateOrInsertBatch" parameterType="org.example.performance.pojo.po.HostInfo">
-        insert into host_info(cpu_arch, cpu_cores, ip,host_name, kernel_release, mem_size, sys_version, update_time)
+        insert into host_info(id,cpu_arch, cpu_cores, ip,host_name, kernel_release, mem_size, sys_version, update_time)
         values
         <foreach collection="hostInfoCollection" item="item" separator=",">
             (
+            #{item.id},
             #{item.cpuArch, jdbcType=VARCHAR},
             #{item.cpuCores, jdbcType=NUMERIC},
             #{item.ip, jdbcType=VARCHAR},

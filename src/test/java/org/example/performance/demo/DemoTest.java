@@ -66,7 +66,7 @@ public class DemoTest {
         LocalDateTime endTime = LocalDateTime.of(2023, 12, 12, 12, 12);
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
-        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
         List<HostMetrics> hostMetricsList = metricsMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
         if (ObjectUtil.isEmpty(hostMetricsList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);

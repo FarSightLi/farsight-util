@@ -25,11 +25,12 @@
         disk_size
     </sql>
     <insert id="updateOrInsertBatch">
-        insert into container_info(container_name, container_id, host_id, image_size, cpus, create_time, version,
+        insert into container_info(id,container_name, container_id, host_id, image_size, cpus, create_time, version,
         mem_size, disk_size, update_time)
         values
         <foreach collection="containerInfoCollection" item="item" separator=",">
             (
+            #{item.id},
             #{item.containerName, jdbcType=VARCHAR},
             #{item.containerId, jdbcType=VARCHAR},
             #{item.hostId, jdbcType=NUMERIC},

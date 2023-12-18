@@ -1,5 +1,6 @@
 package org.example.performance.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -47,33 +48,33 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public void updateOrInsertBatch(List<HostInfo> hostInfoList) {
+        hostInfoList.forEach(hostInfo -> hostInfo.setId(IdUtil.getSnowflakeNextId()));
         hostInfoMapper.updateOrInsertBatch(hostInfoList);
     }
 
     @Override
-    public Map<String, Integer> getIp2IdMap(Collection<String> ipList) {
-        Object ipIdrMapObject = redisTemplate.opsForValue().get(IP_ID_KEY);
+    public Map<String, Long> getIp2IdMap(Collection<String> ipList) {
+        Object ipIdMapObject = redisTemplate.opsForValue().get(IP_ID_KEY);
+        Set<String> ipSet = new HashSet<>(ipList);
         // 缓存中没有，去数据库中查
-        if (ipIdrMapObject == null) {
-            log.info("没有在redis中获取到ip2IdMap");
-            Set<String> ipSet = new HashSet<>(ipList);
-            List<HostInfo> hostInfoList = hostInfoMapper.selectList(new LambdaQueryWrapper<HostInfo>().in(HostInfo::getIp, ipSet).select(HostInfo::getId, HostInfo::getIp));
-            // ip对应主机id的map
-            Map<String, Integer> ip2IdMap = hostInfoList.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getId));
-            // 有ip没查到对应主机id
-            if (ip2IdMap.keySet().size() != ipSet.size()) {
-                Set<String> differenceSet = new HashSet<>(ipList);
-                differenceSet.removeAll(ip2IdMap.keySet());
-                log.warn("有ip没查询到对应的主机id信息，ip为：{}", differenceSet);
-                throw new BusinessException(CodeMsg.SYSTEM_ERROR);
-            }
+        if (ipIdMapObject == null) {
+            log.info("redis中没有ip2IdMap缓存");
+            Map<String, Long> ip2IdMap = getHostIdMapByDB(ipList);
             redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap);
             log.info("ip2idMap已刷新");
             return ip2IdMap;
         } else {
             // 有缓存则直接返回
-            if (ipIdrMapObject instanceof Map) {
-                return (Map<String, Integer>) ipIdrMapObject;
+            if (ipIdMapObject instanceof Map) {
+                Map<String, Long> ip2IdMap = (Map<String, Long>) ipIdMapObject;
+                // 有ip没查到主机id
+                if (ip2IdMap.keySet().size() != ipSet.size()) {
+                    log.info("ip2IdMap缓存不满足要求，查询数据库");
+                    ip2IdMap = getHostIdMapByDB(ipList);
+                    redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap);
+                    log.info("ip2idMap已刷新");
+                }
+                return ip2IdMap;
             } else {
                 log.error("ip2idMap在从redis中获取时类型出错");
                 throw new BusinessException(CodeMsg.SYSTEM_ERROR, "ip2idMap在从redis中获取时类型出错");
@@ -85,7 +86,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
     public HostInfoVO getHostInfo(String ip) {
         HostInfoVO hostInfoVO = new HostInfoVO();
         HostInfo hostInfo = hostInfoMapper.getOneByIp(ip);
-        Integer hostId = hostInfo.getId();
+        Long hostId = hostInfo.getId();
         List<DiskInfo> diskInfoList = diskInfoMapper.selectNewestByHostId(hostId);
         BeanUtils.copyProperties(hostInfo, hostInfoVO);
         hostInfoVO.setDiskInfoVO(getDiskInfoVO(diskInfoList));
@@ -116,6 +117,21 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
         diskInfoVO.setUsedSize(DataUtil.mb2Gb(usedSize) + "GB");
         diskInfoVO.setPartitions(details);
         return diskInfoVO;
+    }
+
+    private Map<String, Long> getHostIdMapByDB(Collection<String> ipList) {
+        Set<String> ipSet = new HashSet<>(ipList);
+        List<HostInfo> hostInfoList = hostInfoMapper.selectList(new LambdaQueryWrapper<HostInfo>().in(HostInfo::getIp, ipSet).select(HostInfo::getId, HostInfo::getIp));
+        // ip对应主机id的map
+        Map<String, Long> ip2IdMap = hostInfoList.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getId));
+        // 有ip没查到对应主机id
+        if (ip2IdMap.keySet().size() != ipSet.size()) {
+            Set<String> differenceSet = new HashSet<>(ipList);
+            differenceSet.removeAll(ip2IdMap.keySet());
+            log.warn("有ip没查询到对应的主机id信息，ip为：{}", differenceSet);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+        }
+        return ip2IdMap;
     }
 }
 

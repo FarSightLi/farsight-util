@@ -23,7 +23,7 @@ public interface HostInfoService extends IService<HostInfo> {
      * @return ip对应id的map
      * @Throw BusinessException
      */
-    Map<String, Integer> getIp2IdMap(Collection<String> ipList);
+    Map<String, Long> getIp2IdMap(Collection<String> ipList);
 
     HostInfoVO getHostInfo(String ip);
 }

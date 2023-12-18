@@ -225,7 +225,7 @@ public class ContainerInfoVO extends ContainerInfo {
 
     @Override
     @JsonIgnore
-    public Integer getHostId() {
+    public Long getHostId() {
         return super.getHostId();
     }
 
@@ -295,7 +295,7 @@ public class ContainerInfoVO extends ContainerInfo {
     }
 
     @Override
-    public void setHostId(Integer hostId) {
+    public void setHostId(Long hostId) {
         super.setHostId(hostId);
     }
 

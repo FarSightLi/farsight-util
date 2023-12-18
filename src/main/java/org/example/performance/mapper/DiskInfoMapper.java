@@ -17,7 +17,7 @@ import java.util.List;
 public interface DiskInfoMapper extends BaseMapper<DiskInfo> {
     int insertBatch(@Param("diskInfoList") List<DiskInfo> diskInfoList);
 
-    List<DiskInfo> selectNewestByHostId(@Param("hostId") Integer hostId);
+    List<DiskInfo> selectNewestByHostId(@Param("hostId") Long hostId);
 }
 
 

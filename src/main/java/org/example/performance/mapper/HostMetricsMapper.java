@@ -19,7 +19,7 @@ import java.util.List;
 public interface HostMetricsMapper extends BaseMapper<HostMetrics> {
     int insertBatch(@Param("hostMetricsCollection") Collection<HostMetrics> hostMetricsCollection);
 
-    List<HostMetrics> selectByHostId(@Param("hostId") Integer hostId,
+    List<HostMetrics> selectByHostId(@Param("hostId") Long hostId,
                                      @Param("startTime") LocalDateTime startTime,
                                      @Param("endTime") LocalDateTime endTime);
 }

@@ -31,8 +31,8 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
 
     @Override
     public Map<String, List<String>> getContainerId(List<String> ipList) {
-        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
-        Map<Integer, List<String>> containerMap = getBaseMapper().selectList(new LambdaQueryWrapper<ContainerInfo>()
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
+        Map<Long, List<String>> containerMap = getBaseMapper().selectList(new LambdaQueryWrapper<ContainerInfo>()
                         .in(ContainerInfo::getHostId, ip2IdMap.values())
                         .select(ContainerInfo::getContainerId, ContainerInfo::getHostId))
                 .stream().collect(Collectors.groupingBy(ContainerInfo::getHostId,
@@ -53,7 +53,7 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
     @Override
     @Transactional
     public void updateOrInsertContainer(List<ContainerInfo> containerInfoList) {
-        Map<String, Integer> ip2IdMap = hostInfoService.getIp2IdMap(containerInfoList.stream().map(ContainerInfo::getHostIp).collect(Collectors.toSet()));
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(containerInfoList.stream().map(ContainerInfo::getHostIp).collect(Collectors.toSet()));
         containerInfoList.forEach(containerInfo -> {
             containerInfo.setHostId(ip2IdMap.get(containerInfo.getHostIp()));
             containerInfo.setUpdateTime(LocalDateTime.now());
