@@ -16,6 +16,23 @@ import java.io.Serializable;
 @TableName(value = "metric_config")
 @Data
 public class MetricConfig implements Serializable {
+    public enum Type {
+        HOST(1),
+        CONTAINER(2),
+        SERVICE(3),
+        CLUSTER(4);
+
+        private final int value;
+
+        Type(int value) {
+            this.value = value;
+        }
+
+        public int getValue() {
+            return value;
+        }
+    }
+
     /**
      * id
      */

@@ -41,7 +41,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
     @Resource
     private DiskInfoMapper diskInfoMapper;
     @Resource
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedisTemplate<String, Map<String, Long>> redisTemplate;
     /**
      * IpIdMap的redisKey
      */
@@ -60,7 +60,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
 
     @Override
     public Map<String, Long> getIp2IdMap(Collection<String> ipList) {
-        Object ipIdMapObject = redisTemplate.opsForValue().get(IP_ID_KEY);
+        Map<String, Long> ipIdMapObject = redisTemplate.opsForValue().get(IP_ID_KEY);
         Set<String> ipSet = new HashSet<>(ipList);
         // 缓存中没有，去数据库中查
         if (ipIdMapObject == null) {
@@ -71,20 +71,15 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
             return ip2IdMap;
         } else {
             // 有缓存则直接返回
-            if (ipIdMapObject instanceof Map) {
-                Map<String, Long> ip2IdMap = (Map<String, Long>) ipIdMapObject;
-                // 有ip没查到主机id
-                if (ip2IdMap.keySet().size() != ipSet.size()) {
-                    log.info("ip2IdMap缓存不满足要求，查询数据库");
-                    ip2IdMap = getHostIdMapByDB(ipList);
-                    redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap, 10L, TimeUnit.MINUTES);
-                    log.info("ip2idMap已刷新");
-                }
-                return ip2IdMap;
-            } else {
-                log.error("ip2idMap在从redis中获取时类型出错");
-                throw new BusinessException(CodeMsg.SYSTEM_ERROR, "ip2idMap在从redis中获取时类型出错");
+            Map<String, Long> ip2IdMap = ipIdMapObject;
+            // 有ip没查到主机id
+            if (ip2IdMap.keySet().size() != ipSet.size()) {
+                log.info("ip2IdMap缓存不满足要求，查询数据库");
+                ip2IdMap = getHostIdMapByDB(ipList);
+                redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap, 10L, TimeUnit.MINUTES);
+                log.info("ip2idMap已刷新");
             }
+            return ip2IdMap;
         }
     }
 
