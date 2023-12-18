@@ -17,7 +17,7 @@ import java.util.List;
  */
 @Mapper
 public interface ContainerMetricsMapper extends BaseMapper<ContainerMetricsBO> {
-    int insertBatch(@Param("containerMetricsCollection") Collection<ContainerMetricsBO> containerMetricsBOCollection);
+    int insertBatch(@Param("containerMetricsBOCollection") Collection<ContainerMetricsBO> containerMetricsBOCollection);
 
 
     List<ContainerMetricsBO> getByContainerIdList(@Param("containerIds") List<String> containerIdList,

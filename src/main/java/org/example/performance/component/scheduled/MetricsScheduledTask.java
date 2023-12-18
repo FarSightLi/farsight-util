@@ -134,8 +134,7 @@ public class MetricsScheduledTask {
         sysFutures.forEach(CompletableFuture::join);
         log.info("主机性能指标:" + hostMetricsBOList);
         diskInfoService.saveDiskInfo(diskInfoList);
-        // TODO 更改实现方式
-        hostMetricsService.insertBatch(hostMetricsBOList);
+        metricRecordService.insertHostBatch(hostMetricsBOList);
         log.info("所有主机性能采集完毕");
     }
 

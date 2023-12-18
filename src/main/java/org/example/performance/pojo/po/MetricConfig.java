@@ -16,7 +16,7 @@ import java.io.Serializable;
 @TableName(value = "metric_config")
 @Data
 public class MetricConfig implements Serializable {
-    public enum Type {
+    public enum Origin {
         HOST(1),
         CONTAINER(2),
         SERVICE(3),
@@ -24,7 +24,7 @@ public class MetricConfig implements Serializable {
 
         private final int value;
 
-        Type(int value) {
+        Origin(int value) {
             this.value = value;
         }
 

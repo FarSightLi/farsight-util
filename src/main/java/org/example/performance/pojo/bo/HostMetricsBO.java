@@ -30,6 +30,7 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
 
     public enum Type {
         MEM, BYTIN, LOAD, CPU, DISK, TCP, MEM_RATE, IO, INODE, BYOUT
+
     }
 
     /**
@@ -118,9 +119,9 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
     private static final long serialVersionUID = 1L;
 
     /**
-     * 传入一个字段type来动态获得字段值
+     * 传入一个字段type枚举来动态获得字段值
      *
-     * @param type 字段类型
+     * @param type 字段枚举
      * @return 返回字段对应的值
      */
     public BigDecimal getInfoByType(Type type) {
@@ -147,6 +148,40 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
         } else {
             log.error("不支持的字段类型{}", type);
             throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 传入一个字段type来动态获得字段值
+     *
+     * @param type 字段类型
+     * @return 返回字段对应的值
+     */
+    public BigDecimal getInfoByType(String type) {
+        switch (type) {
+            case "mem":
+                return mem;
+            case "bytin":
+                return byteIn;
+            case "load":
+                return hostLoad;
+            case "cpu":
+                return cpu;
+            case "disk":
+                return disk;
+            case "tcp":
+                return tcp;
+            case "mem_rate":
+                return memRate;
+            case "io":
+                return io;
+            case "inode":
+                return inode;
+            case "bytout":
+                return byteOut;
+            default:
+                log.error("不支持的字段类型{}", type);
+                throw new BusinessException(CodeMsg.SYSTEM_ERROR);
         }
     }
 }

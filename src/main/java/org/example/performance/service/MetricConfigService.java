@@ -3,6 +3,7 @@ package org.example.performance.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.example.performance.pojo.po.MetricConfig;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -14,8 +15,10 @@ public interface MetricConfigService extends IService<MetricConfig> {
     /**
      * 获得某种类型的配置名对应的配置id
      *
-     * @param type
+     * @param origin
      * @return
      */
-    Map<String, Integer> getConfigMapByType(MetricConfig.Type type);
+    Map<String, Integer> getMetricType2IdMapByType(MetricConfig.Origin origin);
+
+    List<MetricConfig> getMetricConfigList(MetricConfig.Origin origin);
 }

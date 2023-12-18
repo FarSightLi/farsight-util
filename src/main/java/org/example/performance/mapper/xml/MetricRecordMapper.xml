@@ -16,4 +16,13 @@
         id,metric_id,metric_value,
         metric_origin,update_time
     </sql>
+    <insert id="insertBatch">
+        insert into metric_record(metric_id,metric_value,
+        metric_origin,update_time)
+        values
+        <foreach collection="metricRecordCollection" item="item" separator=",">
+            (#{item.metricId,jdbcType=NUMERIC},#{item.metricValue,jdbcType=VARCHAR},
+            #{item.metricOrigin,jdbcType=NUMERIC},#{item.updateTime})
+        </foreach>
+    </insert>
 </mapper>

@@ -14,7 +14,6 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -29,30 +28,27 @@ public class MetricConfigServiceImpl extends ServiceImpl<MetricConfigMapper, Met
     @Resource
     private RedisTemplate<String, Map<String, Integer>> redisTemplate;
 
-    private final String MetricConfigKey = "metric:name_id";
+    private static final String METRIC_CONFIG_KEY = "metric:type_id";
 
-    public Map<String, Integer> getConfigMapByType(MetricConfig.Type type) {
-        Map<String, Integer> name2IdMap = redisTemplate.opsForValue().get(MetricConfigKey);
+    public Map<String, Integer> getMetricType2IdMapByType(MetricConfig.Origin origin) {
+        Map<String, Integer> name2IdMap = redisTemplate.opsForValue().get(METRIC_CONFIG_KEY);
         if (ObjectUtil.isEmpty(name2IdMap)) {
-            name2IdMap = getDBConfigMapByType(type);
             log.info("redis缓存中没有MetricConfig，查询数据库");
+            name2IdMap = getMetricConfigList(origin).stream().collect(Collectors.toMap(MetricConfig::getType, MetricConfig::getId));
         } else {
             log.info("MetricConfig使用了redis缓存");
         }
         return name2IdMap;
     }
 
-    private Map<String, Integer> getDBConfigMapByType(MetricConfig.Type type) {
-        List<MetricConfig> list = lambdaQuery().eq(MetricConfig::getType, type.getValue()).list();
+    @Override
+    public List<MetricConfig> getMetricConfigList(MetricConfig.Origin origin) {
+        List<MetricConfig> list = lambdaQuery().eq(MetricConfig::getOrigin, origin.getValue()).list();
         if (ObjectUtil.isEmpty(list)) {
-            log.info("{}没有对应的配置信息", type);
-            throw new BusinessException(CodeMsg.SYSTEM_ERROR, type + "没有对应的配置信息");
-        } else {
-            Map<String, Integer> name2IdMap = list.stream().collect(Collectors.toMap(MetricConfig::getMetricName, MetricConfig::getId));
-            redisTemplate.opsForValue().set(MetricConfigKey, name2IdMap, 1L, TimeUnit.HOURS);
-            log.info("MetricConfig的redis缓存已刷新");
-            return name2IdMap;
+            log.info("{}没有对应的配置信息", origin);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, origin + "没有对应的配置信息");
         }
+        return list;
     }
 }
 
