@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.example.performance.mapper.ContainerMetricsMapper">
 
-    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.ContainerMetrics">
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.bo.ContainerMetricsBO">
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="containerId" column="container_id" jdbcType="VARCHAR"/>
             <result property="cpuRate" column="cpu_rate" jdbcType="DOUBLE"/>
@@ -24,7 +24,7 @@
         restart_time,state,mem_used_size,
         disk_used_size,update_time)
         values
-        <foreach collection="containerMetricsCollection" item="item" separator=",">
+        <foreach collection="containerMetricsBOCollection" item="item" separator=",">
             (#{item.id,jdbcType=NUMERIC},#{item.containerId,jdbcType=VARCHAR},#{item.cpuRate,jdbcType=DECIMAL},
             #{item.restartTime},#{item.state,jdbcType=VARCHAR},#{item.memUsedSize,jdbcType=DECIMAL},
             #{item.diskUsedSize,jdbcType=DECIMAL},#{item.updateTime})

@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.mapper.HostMetricsMapper;
+import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.pojo.po.AlertRule;
-import org.example.performance.pojo.po.HostMetrics;
 import org.example.performance.pojo.vo.HostMetricsVO;
 import org.example.performance.service.AlertRuleService;
 import org.example.performance.service.HostInfoService;
@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostMetrics>
+public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostMetricsBO>
         implements HostMetricsService {
     @Resource
     private HostInfoService hostInfoService;
@@ -36,13 +36,13 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
     private AlertRuleService alertRuleService;
 
     @Override
-    public void insertBatch(List<HostMetrics> hostMetricsList) {
-        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(hostMetricsList.stream().map(HostMetrics::getHostIp).collect(Collectors.toList()));
-        hostMetricsList.forEach(hostMetrics -> {
+    public void insertBatch(List<HostMetricsBO> hostMetricsBOList) {
+        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(hostMetricsBOList.stream().map(HostMetricsBO::getHostIp).collect(Collectors.toList()));
+        hostMetricsBOList.forEach(hostMetrics -> {
             hostMetrics.setHostId(ip2IdMap.get(hostMetrics.getHostIp()));
             hostMetrics.setUpdateTime(LocalDateTime.now());
         });
-        baseMapper.insertBatch(hostMetricsList);
+        baseMapper.insertBatch(hostMetricsBOList);
     }
 
     @Override
@@ -50,19 +50,19 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
-        List<HostMetrics> hostMetricsList = baseMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
-        if (ObjectUtil.isEmpty(hostMetricsList)) {
+        List<HostMetricsBO> hostMetricsBOList = baseMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
+        if (ObjectUtil.isEmpty(hostMetricsBOList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
             return Collections.emptyList();
         }
 
         Integer interval = MyUtil.getInterval(startTime, endTime);
         // 根据时间间隔过滤后的性能指标列表
-        List<HostMetrics> filterHostMetricsList = MyUtil.filterListByTime(hostMetricsList, interval);
+        List<HostMetricsBO> filterHostMetricsBOList = MyUtil.filterListByTime(hostMetricsBOList, interval);
 
         // 时间对应的性能信息map(极小概率会出现同一时间有多条性能数据)
-        Map<LocalDateTime, HostMetrics> map = filterHostMetricsList.stream()
-                .collect(Collectors.toMap(HostMetrics::getUpdateTime, Function.identity(), (old, replace) -> replace));
+        Map<LocalDateTime, HostMetricsBO> map = filterHostMetricsBOList.stream()
+                .collect(Collectors.toMap(HostMetricsBO::getUpdateTime, Function.identity(), (old, replace) -> replace));
         List<AlertRule> alertRuleList = alertRuleService.list();
         // 告警信息map
         Map<String, AlertRule> alertMap = new HashMap<>(alertRuleList.size());
@@ -78,19 +78,19 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
             String name;
             String type;
             String desc;
-            HostMetrics.Type fieldType;
+            HostMetricsBO.Type fieldType;
         }
         List<Data> dataList = new ArrayList<>();
-        dataList.add(new Data("host.mem.sum", "mem", "主机内存使用量(MB)", HostMetrics.Type.MEM));
-        dataList.add(new Data("host.network.bytin", "bytin", "主机网络流量IN(MB/s)", HostMetrics.Type.BYTIN));
-        dataList.add(new Data("host.load.avg", "load", "主机负载(1min)", HostMetrics.Type.LOAD));
-        dataList.add(new Data("host.cpu.rate", "cpu", "主机CPU使用率(%)", HostMetrics.Type.CPU));
-        dataList.add(new Data("host.disk.rate", "disk", "主机磁盘使用率(/data，%)", HostMetrics.Type.DISK));
-        dataList.add(new Data("host.network.tcp", "tcp", "主机TCP连接数", HostMetrics.Type.TCP));
-        dataList.add(new Data("host.mem.rate", "mem_rate", "主机内存使用率(%)", HostMetrics.Type.MEM_RATE));
-        dataList.add(new Data("host.disk.io.rate", "io", "主机磁盘IO使用率(/data，%)", HostMetrics.Type.MEM_RATE));
-        dataList.add(new Data("host.disk.inode.rate", "inode", "主机磁盘INODE使用率(/data，%)", HostMetrics.Type.INODE));
-        dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetrics.Type.BYOUT));
+        dataList.add(new Data("host.mem.sum", "mem", "主机内存使用量(MB)", HostMetricsBO.Type.MEM));
+        dataList.add(new Data("host.network.bytin", "bytin", "主机网络流量IN(MB/s)", HostMetricsBO.Type.BYTIN));
+        dataList.add(new Data("host.load.avg", "load", "主机负载(1min)", HostMetricsBO.Type.LOAD));
+        dataList.add(new Data("host.cpu.rate", "cpu", "主机CPU使用率(%)", HostMetricsBO.Type.CPU));
+        dataList.add(new Data("host.disk.rate", "disk", "主机磁盘使用率(/data，%)", HostMetricsBO.Type.DISK));
+        dataList.add(new Data("host.network.tcp", "tcp", "主机TCP连接数", HostMetricsBO.Type.TCP));
+        dataList.add(new Data("host.mem.rate", "mem_rate", "主机内存使用率(%)", HostMetricsBO.Type.MEM_RATE));
+        dataList.add(new Data("host.disk.io.rate", "io", "主机磁盘IO使用率(/data，%)", HostMetricsBO.Type.MEM_RATE));
+        dataList.add(new Data("host.disk.inode.rate", "inode", "主机磁盘INODE使用率(/data，%)", HostMetricsBO.Type.INODE));
+        dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetricsBO.Type.BYOUT));
         map.forEach((time, info) -> dataList.forEach(data -> voList.add(createHostMetricsVO(data.desc,
                 data.name, data.type, info.getInfoByType(data.fieldType), info.getUpdateTime(),
                 finalAlertMap.getOrDefault(data.name, new AlertRule()).getWarningValue(),

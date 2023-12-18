@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  * @date 2023/12/11 09:29:55
  */
 @SpringBootTest
-class ContainerMetricsServiceImplTest {
+class ContainerMetricsBOServiceImplTest {
     @Resource
     private ContainerMetricsService containerMetricsService;
 

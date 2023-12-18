@@ -4,7 +4,7 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.XmlUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.mapper.HostMetricsMapper;
-import org.example.performance.pojo.po.HostMetrics;
+import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.service.HostMetricsService;
 import org.junit.jupiter.api.Test;
@@ -67,8 +67,8 @@ public class DemoTest {
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
-        List<HostMetrics> hostMetricsList = metricsMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
-        if (ObjectUtil.isEmpty(hostMetricsList)) {
+        List<HostMetricsBO> hostMetricsBOList = metricsMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
+        if (ObjectUtil.isEmpty(hostMetricsBOList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
         }
 
@@ -84,13 +84,13 @@ public class DemoTest {
 
         // 指定时间间隔（秒）
         int timeIntervalInSeconds = 3600; // 一小时
-        Map<Long, List<HostMetrics>> hourlyMetricsMap = hostMetricsList.stream()
+        Map<Long, List<HostMetricsBO>> hourlyMetricsMap = hostMetricsBOList.stream()
                 .collect(Collectors.groupingBy(
                         metrics -> metrics.getUpdateTime().atZone(ZoneId.systemDefault()).toEpochSecond() / 3600
                 ));
-        List<HostMetrics> collect = hourlyMetricsMap.values().stream()
+        List<HostMetricsBO> collect = hourlyMetricsMap.values().stream()
                 .map(metricsList -> metricsList.stream()
-                        .max(Comparator.comparing(HostMetrics::getUpdateTime))
+                        .max(Comparator.comparing(HostMetricsBO::getUpdateTime))
                         .orElse(null)
                 )
                 .filter(Objects::nonNull)

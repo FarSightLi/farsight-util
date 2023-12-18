@@ -8,7 +8,11 @@ import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
-import org.example.performance.pojo.po.*;
+import org.example.performance.pojo.bo.ContainerMetricsBO;
+import org.example.performance.pojo.bo.HostMetricsBO;
+import org.example.performance.pojo.po.ContainerInfo;
+import org.example.performance.pojo.po.DiskInfo;
+import org.example.performance.pojo.po.HostInfo;
 import org.example.performance.util.DataUtil;
 
 import java.math.BigDecimal;
@@ -45,8 +49,8 @@ public class InfoService {
         return hostInfo;
     }
 
-    public HostMetrics getSysIndex(Session session, String ip) {
-        HostMetrics hostmetrics = new HostMetrics();
+    public HostMetricsBO getSysIndex(Session session, String ip) {
+        HostMetricsBO hostmetrics = new HostMetricsBO();
         hostmetrics.setHostIp(ip);
         hostmetrics.setMemRate(string2Decimal(execCmd(session, "tsar --mem -C -s  util  | awk -F= '{print $2}'")));
         hostmetrics.setMem(parseDataSize(execCmd(session, "tsar --mem -C -s  used  | awk -F= '{print $2}'")));
@@ -121,29 +125,29 @@ public class InfoService {
         return containerInfo;
     }
 
-    public ContainerMetrics getContainerIndexInfo(Session session, String containerId, String ip) {
-        ContainerMetrics containerMetrics = new ContainerMetrics();
-        containerMetrics.setContainerId(containerId);
+    public ContainerMetricsBO getContainerIndexInfo(Session session, String containerId, String ip) {
+        ContainerMetricsBO containerMetricsBO = new ContainerMetricsBO();
+        containerMetricsBO.setContainerId(containerId);
         try {
             String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
             HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
-            containerMetrics.setState(detailsMap.get("State"));
+            containerMetricsBO.setState(detailsMap.get("State"));
             String cpuRate = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $3} '", containerId));
-            containerMetrics.setCpuRate(DataUtil.string2Decimal(removePercent(cpuRate)));
+            containerMetricsBO.setCpuRate(DataUtil.string2Decimal(removePercent(cpuRate)));
             String onlineTime = execCmd(session, String.format("docker inspect --format '{{.State.StartedAt}}' %s", containerId));
-            containerMetrics.setRestartTime(getTime(onlineTime));
+            containerMetricsBO.setRestartTime(getTime(onlineTime));
             String memUsedSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $4} '", containerId));
             String diskUsedSize = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $11} '", containerId));
-            containerMetrics.setMemUsedSize(parseDataSize(memUsedSize));
-            containerMetrics.setDiskUsedSize(parseDataSize(diskUsedSize));
-            log.info(ip + " 的 " + containerMetrics.getContainerId() + ":\n" + new ObjectMapper().writeValueAsString(containerMetrics));
+            containerMetricsBO.setMemUsedSize(parseDataSize(memUsedSize));
+            containerMetricsBO.setDiskUsedSize(parseDataSize(diskUsedSize));
+            log.info(ip + " 的 " + containerMetricsBO.getContainerId() + ":\n" + new ObjectMapper().writeValueAsString(containerMetricsBO));
         } catch (JsonProcessingException e) {
             log.error("json解析出错---" + e.getMessage());
         } catch (Exception e) {
-            log.error("{}的{}容器性能指标出错了", ip, containerMetrics.getContainerId());
+            log.error("{}的{}容器性能指标出错了", ip, containerMetricsBO.getContainerId());
             log.error(e.toString(), e);
         }
-        return containerMetrics;
+        return containerMetricsBO;
     }
 
 

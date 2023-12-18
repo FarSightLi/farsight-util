@@ -6,7 +6,11 @@ import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.config.SessionConfig;
 import org.example.performance.config.ThreadPoolConfig;
-import org.example.performance.pojo.po.*;
+import org.example.performance.pojo.bo.ContainerMetricsBO;
+import org.example.performance.pojo.bo.HostMetricsBO;
+import org.example.performance.pojo.po.ContainerInfo;
+import org.example.performance.pojo.po.DiskInfo;
+import org.example.performance.pojo.po.HostInfo;
 import org.example.performance.service.*;
 import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -39,6 +43,8 @@ public class MetricsScheduledTask {
     private HostXmlScheduledTask hostXmlScheduledTask;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
+    @Resource
+    private MetricRecordService metricRecordService;
 
     /**
      * ip对应容器map的redis的key
@@ -112,23 +118,23 @@ public class MetricsScheduledTask {
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getSysIndexTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
-        List<HostMetrics> hostMetricsList = Collections.synchronizedList(new ArrayList<>());
+        List<HostMetricsBO> hostMetricsBOList = Collections.synchronizedList(new ArrayList<>());
         List<DiskInfo> diskInfoList = Collections.synchronizedList(new ArrayList<>());
         // 主机性能采集
         CacheInfo.getIpList().forEach(ip -> {
                     CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                        HostMetrics hostMetrics = infoService.getSysIndex(SessionConfig.getSession(ip), ip);
-                        hostMetricsList.add(hostMetrics);
-                        diskInfoList.addAll(hostMetrics.getDiskInfoList());
+                        HostMetricsBO hostMetricsBO = infoService.getSysIndex(SessionConfig.getSession(ip), ip);
+                        hostMetricsBOList.add(hostMetricsBO);
+                        diskInfoList.addAll(hostMetricsBO.getDiskInfoList());
                     }, ThreadPoolConfig.getSys());
                     sysFutures.add(future);
                 }
         );
         sysFutures.forEach(CompletableFuture::join);
-        log.info("主机性能指标:" + hostMetricsList);
+        log.info("主机性能指标:" + hostMetricsBOList);
         diskInfoService.saveDiskInfo(diskInfoList);
         // TODO 更改实现方式
-        hostMetricsService.insertBatch(hostMetricsList);
+        hostMetricsService.insertBatch(hostMetricsBOList);
         log.info("所有主机性能采集完毕");
     }
 
@@ -139,19 +145,19 @@ public class MetricsScheduledTask {
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
         Map<String, List<String>> containerMap = getContainerMap();
-        List<ContainerMetrics> containerMetricsList = Collections.synchronizedList(new ArrayList<>());
+        List<ContainerMetricsBO> containerMetricsBOList = Collections.synchronizedList(new ArrayList<>());
         // 容器信息采集
         List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
         containerMap.forEach((ip, idList) -> idList.forEach(id -> {
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                containerMetricsList.add(infoService.getContainerIndexInfo(SessionConfig.getSession(ip), id, ip));
+                containerMetricsBOList.add(infoService.getContainerIndexInfo(SessionConfig.getSession(ip), id, ip));
             }, ThreadPoolConfig.getContainer());
             containerFutures.add(future);
         }));
         containerFutures.forEach(CompletableFuture::join);
-        log.info("容器性能指标:" + containerMetricsList);
+        log.info("容器性能指标:" + containerMetricsBOList);
         // TODO 更改实现方式
-        containerMetricsService.insertBatch(containerMetricsList);
+        containerMetricsService.insertBatch(containerMetricsBOList);
         log.info("所有容器性能指标采集完毕");
     }
 

@@ -3,7 +3,7 @@ package org.example.performance.mapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
-import org.example.performance.pojo.po.HostMetrics;
+import org.example.performance.pojo.bo.HostMetricsBO;
 
 import java.time.LocalDateTime;
 import java.util.Collection;
@@ -16,12 +16,12 @@ import java.util.List;
  * @Entity org.example.performance.po.HostMetrics
  */
 @Mapper
-public interface HostMetricsMapper extends BaseMapper<HostMetrics> {
-    int insertBatch(@Param("hostMetricsCollection") Collection<HostMetrics> hostMetricsCollection);
+public interface HostMetricsMapper extends BaseMapper<HostMetricsBO> {
+    int insertBatch(@Param("hostMetricsCollection") Collection<HostMetricsBO> hostMetricsBOCollection);
 
-    List<HostMetrics> selectByHostId(@Param("hostId") Long hostId,
-                                     @Param("startTime") LocalDateTime startTime,
-                                     @Param("endTime") LocalDateTime endTime);
+    List<HostMetricsBO> selectByHostId(@Param("hostId") Long hostId,
+                                       @Param("startTime") LocalDateTime startTime,
+                                       @Param("endTime") LocalDateTime endTime);
 }
 
 

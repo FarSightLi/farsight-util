@@ -1,4 +1,4 @@
-package org.example.performance.pojo.po;
+package org.example.performance.pojo.bo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -25,7 +25,7 @@ import java.time.LocalDateTime;
 @TableName(value = "container_metrics")
 @Data
 @Slf4j
-public class ContainerMetrics implements Serializable, HasUpdateTime {
+public class ContainerMetricsBO implements Serializable, HasUpdateTime {
     public enum Type {
         CPU,
         MEM,

@@ -1,4 +1,4 @@
-package org.example.performance.pojo.po;
+package org.example.performance.pojo.bo;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.HasUpdateTime;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
+import org.example.performance.pojo.po.DiskInfo;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -25,7 +26,7 @@ import java.util.List;
 @TableName(value = "host_metrics")
 @Data
 @Slf4j
-public class HostMetrics implements Serializable, HasUpdateTime {
+public class HostMetricsBO implements Serializable, HasUpdateTime {
 
     public enum Type {
         MEM, BYTIN, LOAD, CPU, DISK, TCP, MEM_RATE, IO, INODE, BYOUT

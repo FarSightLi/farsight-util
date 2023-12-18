@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.example.performance.mapper.HostMetricsMapper">
 
-    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.HostMetrics">
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.bo.HostMetricsBO">
             <id property="id" column="id" jdbcType="INTEGER"/>
             <result property="hostId" column="host_id" jdbcType="INTEGER"/>
             <result property="mem" column="mem" jdbcType="DECIMAL"/>
@@ -32,7 +32,7 @@
         mem_rate,io,inode,
         byte_out,update_time)
         values
-        <foreach collection="hostMetricsCollection" item="item" separator=",">
+        <foreach collection="hostMetricsBOCollection" item="item" separator=",">
             (#{item.id,jdbcType=NUMERIC},#{item.hostId,jdbcType=NUMERIC},
             #{item.mem,jdbcType=DECIMAL},#{item.byteIn,jdbcType=DECIMAL},#{item.hostLoad,jdbcType=DECIMAL},
             #{item.cpu,jdbcType=DECIMAL},#{item.disk,jdbcType=DECIMAL},#{item.tcp,jdbcType=DECIMAL},

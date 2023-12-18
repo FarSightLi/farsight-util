@@ -6,9 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.mapper.ContainerMetricsMapper;
+import org.example.performance.pojo.bo.ContainerMetricsBO;
 import org.example.performance.pojo.po.AlertRule;
 import org.example.performance.pojo.po.ContainerInfo;
-import org.example.performance.pojo.po.ContainerMetrics;
 import org.example.performance.pojo.po.HostInfo;
 import org.example.performance.pojo.vo.ContainerInfoVO;
 import org.example.performance.pojo.vo.ContainerTrendVO;
@@ -39,7 +39,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMapper, ContainerMetrics>
+public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMapper, ContainerMetricsBO>
         implements ContainerMetricsService {
     @Resource
     private ContainerInfoService containerInfoService;
@@ -49,16 +49,16 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
     private AlertRuleService alertRuleService;
 
     @Override
-    public void insertBatch(List<ContainerMetrics> containerMetricsList) {
-        containerMetricsList.forEach(containerMetrics -> containerMetrics.setUpdateTime(LocalDateTime.now()));
-        baseMapper.insertBatch(containerMetricsList);
+    public void insertBatch(List<ContainerMetricsBO> containerMetricsBOList) {
+        containerMetricsBOList.forEach(containerMetrics -> containerMetrics.setUpdateTime(LocalDateTime.now()));
+        baseMapper.insertBatch(containerMetricsBOList);
     }
 
     @Override
     public List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
         List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
-        List<ContainerMetrics> metricsList = (List<ContainerMetrics>) infoAndMetricsList.get(1);
+        List<ContainerMetricsBO> metricsList = (List<ContainerMetricsBO>) infoAndMetricsList.get(1);
         // 获得容器CPU为零的主机id
         Set<Long> hostIdList = containerInfoList.stream().filter(containerInfo -> containerInfo.getCpus().compareTo(BigDecimal.ZERO) == 0).map(ContainerInfo::getHostId).collect(Collectors.toSet());
         // 主机id对应cpu数的map
@@ -74,26 +74,26 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
             throw new BusinessException(CodeMsg.PARAMETER_ERROR, "该时段没有相关的信息");
         }
         // 容器id对应的所有性能指标
-        Map<String, List<ContainerMetrics>> containerMetricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetrics::getContainerId));
+        Map<String, List<ContainerMetricsBO>> containerMetricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getContainerId));
         List<ContainerInfoVO> voList = new ArrayList<>();
         // 提供给Lambda使用
         Map<Long, Integer> finalHostCpuMap = hostCpuMap;
         containerInfoList.forEach(containerInfo -> {
             ContainerInfoVO vo = new ContainerInfoVO();
             // 所有历史数据
-            List<ContainerMetrics> containerMetricsList = containerMetricsMap.get(containerInfo.getContainerId());
-            if (ObjectUtil.isNotEmpty(containerMetricsList)) {
+            List<ContainerMetricsBO> containerMetricsBOList = containerMetricsMap.get(containerInfo.getContainerId());
+            if (ObjectUtil.isNotEmpty(containerMetricsBOList)) {
                 // 拿到最新的数据
-                ContainerMetrics containerMetrics = containerMetricsList.stream()
+                ContainerMetricsBO containerMetricsBO = containerMetricsBOList.stream()
                         .filter(Objects::nonNull)
-                        .max(Comparator.comparing(ContainerMetrics::getUpdateTime))
+                        .max(Comparator.comparing(ContainerMetricsBO::getUpdateTime))
                         .orElseThrow(() -> new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能指标数据有错"));
-                BeanUtils.copyProperties(containerMetrics, vo);
+                BeanUtils.copyProperties(containerMetricsBO, vo);
                 BeanUtils.copyProperties(containerInfo, vo);
                 // 计算三个指标的最大值及相关信息
-                getThreeMaxIndex(containerMetricsList, vo, containerInfo, finalHostCpuMap);
+                getThreeMaxIndex(containerMetricsBOList, vo, containerInfo, finalHostCpuMap);
                 // 计算三个指标的平均值
-                getThreeAvgIndex(containerMetricsList, vo, containerInfo);
+                getThreeAvgIndex(containerMetricsBOList, vo, containerInfo);
                 // 计算在线时长
                 vo.setOnlineTime(calculateDurationMillis(vo.getRestartTime()));
                 // 计算预警状态
@@ -110,36 +110,36 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
     public List<ContainerTrendVO> getMetricTrend(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
         List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
-        List<ContainerMetrics> metricsList = (List<ContainerMetrics>) infoAndMetricsList.get(1);
+        List<ContainerMetricsBO> metricsList = (List<ContainerMetricsBO>) infoAndMetricsList.get(1);
         Map<String, ContainerInfo> infoMap = containerInfoList.stream().collect(Collectors.toMap(ContainerInfo::getContainerId, Function.identity()));
-        Map<String, List<ContainerMetrics>> metricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetrics::getContainerId));
+        Map<String, List<ContainerMetricsBO>> metricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getContainerId));
         List<ContainerTrendVO> voList = new ArrayList<>();
         Map<String, AlertRule> ruleMap = alertRuleService.list().stream().collect(Collectors.toMap(AlertRule::getMetricName, Function.identity()));
         infoMap.forEach((id, info) -> {
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.DISK, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.CPU, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetrics.Type.MEM_RATE, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.MEM, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.DISK, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.CPU, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.MEM_RATE, ruleMap, info, metricsMap.get(id)));
         });
         return voList;
     }
 
-    private ContainerTrendVO getContainerTrendVO(ContainerMetrics.Type type,
+    private ContainerTrendVO getContainerTrendVO(ContainerMetricsBO.Type type,
                                                  Map<String, AlertRule> ruleMap,
                                                  ContainerInfo info,
-                                                 List<ContainerMetrics> metricsList) {
+                                                 List<ContainerMetricsBO> metricsList) {
         String desc = "";
         String name = "";
         String ruleKey = "";
-        if (type.equals(ContainerMetrics.Type.CPU)) {
+        if (type.equals(ContainerMetricsBO.Type.CPU)) {
             desc = "容器CPU使用率(相对于limit，%)";
             name = "cpu";
             ruleKey = "container.cpu.rate";
-        } else if (type.equals(ContainerMetrics.Type.MEM)) {
+        } else if (type.equals(ContainerMetricsBO.Type.MEM)) {
             desc = "容器内存使用量(MB)";
             name = "mem";
             ruleKey = "container.mem.sum";
-        } else if (type.equals(ContainerMetrics.Type.DISK)) {
+        } else if (type.equals(ContainerMetricsBO.Type.DISK)) {
             desc = "容器磁盘使用量(MB)";
             name = "disk";
             ruleKey = "container.disk.sum";
@@ -164,10 +164,10 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         return vo;
     }
 
-    private void getThreeMaxIndex(List<ContainerMetrics> containerMetricsList, ContainerInfoVO vo, ContainerInfo containerInfo, Map<Long, Integer> hostCpuMap) {
-        BigDecimal maxCpuRate = containerMetricsList.stream()
+    private void getThreeMaxIndex(List<ContainerMetricsBO> containerMetricsBOList, ContainerInfoVO vo, ContainerInfo containerInfo, Map<Long, Integer> hostCpuMap) {
+        BigDecimal maxCpuRate = containerMetricsBOList.stream()
                 .filter(containerMetrics -> containerMetrics.getCpuRate() != null)
-                .max(Comparator.comparing(ContainerMetrics::getCpuRate))
+                .max(Comparator.comparing(ContainerMetricsBO::getCpuRate))
                 .orElseThrow(() -> new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能指标数据有错")).getCpuRate();
         BigDecimal cpus = containerInfo.getCpus();
         // 代表没有限制,容器cpu即是主机cpu数
@@ -183,29 +183,29 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
         BigDecimal maxCpuUsage = maxCpuRate.multiply(cpus);
         vo.setMaxCpuRate(maxCpuRate);
         vo.setMaxCpuUsage(maxCpuUsage);
-        BigDecimal maxMemUsedSize = containerMetricsList.stream()
+        BigDecimal maxMemUsedSize = containerMetricsBOList.stream()
                 .filter(e -> e.getMemUsedSize() != null)
-                .max(Comparator.comparing(ContainerMetrics::getMemUsedSize))
+                .max(Comparator.comparing(ContainerMetricsBO::getMemUsedSize))
                 .orElseThrow(() -> new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能指标数据有错")).getMemUsedSize();
         BigDecimal maxMemUsedRate = maxMemUsedSize.divide(containerInfo.getMemSize(), 1, RoundingMode.HALF_UP);
         vo.setMaxMemUsage(maxMemUsedSize);
         vo.setMaxMemUsedRate(maxMemUsedRate);
-        BigDecimal maxDiskUsedSize = containerMetricsList.stream()
+        BigDecimal maxDiskUsedSize = containerMetricsBOList.stream()
                 .filter(e -> e.getDiskUsedSize() != null)
-                .max(Comparator.comparing(ContainerMetrics::getDiskUsedSize))
+                .max(Comparator.comparing(ContainerMetricsBO::getDiskUsedSize))
                 .orElseThrow(() -> new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能指标数据有错")).getDiskUsedSize();
         BigDecimal maxDiskUsedRate = maxDiskUsedSize.divide(containerInfo.getDiskSize(), 1, RoundingMode.HALF_UP);
         vo.setMaxDiskUsage(maxDiskUsedSize);
         vo.setMaxDiskUsedRate(maxDiskUsedRate);
     }
 
-    private void getThreeAvgIndex(List<ContainerMetrics> containerMetricsList, ContainerInfoVO vo, ContainerInfo containerInfo) {
-        BigDecimal avgCpuRate = DataUtil.double2Decimal(containerMetricsList.stream()
-                .map(ContainerMetrics::getCpuRate).filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).average().orElse(0));
-        BigDecimal avgDiskUsed = DataUtil.double2Decimal(containerMetricsList.stream()
-                .map(ContainerMetrics::getDiskUsedSize).filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).average().orElse(0));
-        BigDecimal avgMemUsed = DataUtil.double2Decimal(containerMetricsList.stream()
-                .map(ContainerMetrics::getMemUsedSize).filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).average().orElse(0));
+    private void getThreeAvgIndex(List<ContainerMetricsBO> containerMetricsBOList, ContainerInfoVO vo, ContainerInfo containerInfo) {
+        BigDecimal avgCpuRate = DataUtil.double2Decimal(containerMetricsBOList.stream()
+                .map(ContainerMetricsBO::getCpuRate).filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).average().orElse(0));
+        BigDecimal avgDiskUsed = DataUtil.double2Decimal(containerMetricsBOList.stream()
+                .map(ContainerMetricsBO::getDiskUsedSize).filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).average().orElse(0));
+        BigDecimal avgMemUsed = DataUtil.double2Decimal(containerMetricsBOList.stream()
+                .map(ContainerMetricsBO::getMemUsedSize).filter(Objects::nonNull).mapToDouble(BigDecimal::doubleValue).average().orElse(0));
         BigDecimal cpuUsage = containerInfo.getCpus().multiply(avgCpuRate);
         vo.setAvgCpuUsage(cpuUsage.setScale(1, RoundingMode.HALF_UP));
         vo.setAvgCpuRate(avgCpuRate);
@@ -284,9 +284,9 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
             throw new BusinessException(CodeMsg.SYSTEM_ERROR);
         }
         List<ContainerInfo> containerInfoList = containerInfoService.getListByContainerIdList(containerIdList);
-        List<ContainerMetrics> metricsList = baseMapper.getByContainerIdList(containerIdList, startTime, endTime);
-        Map<String, List<ContainerMetrics>> groupByContainerId = metricsList.stream().collect(Collectors.groupingBy(ContainerMetrics::getContainerId));
-        List<ContainerMetrics> newMetricsList = new ArrayList<>();
+        List<ContainerMetricsBO> metricsList = baseMapper.getByContainerIdList(containerIdList, startTime, endTime);
+        Map<String, List<ContainerMetricsBO>> groupByContainerId = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getContainerId));
+        List<ContainerMetricsBO> newMetricsList = new ArrayList<>();
         // 根据时间间隔筛选数据
         groupByContainerId.forEach((k, v) -> {
             newMetricsList.addAll(MyUtil.filterListByTime(v, interval));
@@ -298,8 +298,8 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
     }
 
 
-    private ContainerTrendVO.MetricValue getMetricValueList(List<ContainerMetrics> metricsList,
-                                                            ContainerMetrics.Type type, BigDecimal memSize) {
+    private ContainerTrendVO.MetricValue getMetricValueList(List<ContainerMetricsBO> metricsList,
+                                                            ContainerMetricsBO.Type type, BigDecimal memSize) {
         ContainerTrendVO.MetricValue metricValue = new ContainerTrendVO.MetricValue();
         List<Object> list = new ArrayList<>();
         metricsList.forEach(e -> {
