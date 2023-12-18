@@ -24,6 +24,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -65,7 +66,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
         if (ipIdMapObject == null) {
             log.info("redis中没有ip2IdMap缓存");
             Map<String, Long> ip2IdMap = getHostIdMapByDB(ipList);
-            redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap);
+            redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap, 10L, TimeUnit.MINUTES);
             log.info("ip2idMap已刷新");
             return ip2IdMap;
         } else {
@@ -76,7 +77,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
                 if (ip2IdMap.keySet().size() != ipSet.size()) {
                     log.info("ip2IdMap缓存不满足要求，查询数据库");
                     ip2IdMap = getHostIdMapByDB(ipList);
-                    redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap);
+                    redisTemplate.opsForValue().set(IP_ID_KEY, ip2IdMap, 10L, TimeUnit.MINUTES);
                     log.info("ip2idMap已刷新");
                 }
                 return ip2IdMap;

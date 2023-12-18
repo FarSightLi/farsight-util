@@ -22,6 +22,7 @@ import javax.annotation.PostConstruct;
 import javax.annotation.Resource;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 @Component
@@ -180,7 +181,7 @@ public class MetricsScheduledTask {
      * @param newData
      */
     public void updateCache(Map<String, List<String>> newData) {
-        redisTemplate.opsForValue().set(IP_CONTAINER_KEY, newData);
+        redisTemplate.opsForValue().set(IP_CONTAINER_KEY, newData, 10L, TimeUnit.MINUTES);
         log.info("ip对应容器信息缓存已更新");
     }
 
