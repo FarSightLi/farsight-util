@@ -45,7 +45,7 @@ public class HostInfoMapperTest {
         List<HostInfo> hostInfos = hostInfoMapper.selectList(new LambdaQueryWrapper<HostInfo>().in(HostInfo::getIp, ipList).select(HostInfo::getId, HostInfo::getIp));
         System.out.println(hostInfos);
         System.out.println(hostInfos.size());
-        Map<String, Integer> collect = hostInfos.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getId));
+        Map<String, Long> collect = hostInfos.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getId));
         System.out.println(collect);
     }
 }
