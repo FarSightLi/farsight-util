@@ -213,7 +213,7 @@ public class ContainerInfoVO extends ContainerInfo {
 
     @Override
     @JsonIgnore
-    public Integer getId() {
+    public Long getId() {
         return super.getId();
     }
 
@@ -245,7 +245,7 @@ public class ContainerInfoVO extends ContainerInfo {
 
     @Override
     @JsonIgnore
-    public void setId(Integer id) {
+    public void setId(Long id) {
         super.setId(id);
     }
 

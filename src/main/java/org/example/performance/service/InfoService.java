@@ -12,7 +12,6 @@ import org.example.performance.pojo.po.*;
 import org.example.performance.util.DataUtil;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -36,7 +35,6 @@ public class InfoService {
         String memByteSize = execCmd(session, "tsar --mem -C -s total | awk -F= '{print $2}'");
         hostInfo.setMemSize(parseDataSize(memByteSize));
         hostInfo.setKernelRelease(execCmd(session, "uname -r"));
-        hostInfo.setUpdateTime(LocalDateTime.now());
         hostInfo.setContainerIdList(Arrays.stream(JschUtil.exec(session, "docker ps -a | awk 'FNR>1 {print $1}'", null).split("\n")).collect(Collectors.toList()));
 
         try {

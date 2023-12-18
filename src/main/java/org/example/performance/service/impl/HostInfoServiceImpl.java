@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -48,7 +49,11 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
     @Override
     @Transactional(rollbackFor = RuntimeException.class)
     public void updateOrInsertBatch(List<HostInfo> hostInfoList) {
-        hostInfoList.forEach(hostInfo -> hostInfo.setId(IdUtil.getSnowflakeNextId()));
+        LocalDateTime now = LocalDateTime.now();
+        hostInfoList.forEach(hostInfo -> {
+            hostInfo.setId(IdUtil.getSnowflakeNextId());
+            hostInfo.setUpdateTime(now);
+        });
         hostInfoMapper.updateOrInsertBatch(hostInfoList);
     }
 

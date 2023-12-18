@@ -1,5 +1,6 @@
 package org.example.performance.service.impl;
 
+import cn.hutool.core.util.IdUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
@@ -54,9 +55,11 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
     @Transactional
     public void updateOrInsertContainer(List<ContainerInfo> containerInfoList) {
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(containerInfoList.stream().map(ContainerInfo::getHostIp).collect(Collectors.toSet()));
+        LocalDateTime now = LocalDateTime.now();
         containerInfoList.forEach(containerInfo -> {
+            containerInfo.setId(IdUtil.getSnowflakeNextId());
             containerInfo.setHostId(ip2IdMap.get(containerInfo.getHostIp()));
-            containerInfo.setUpdateTime(LocalDateTime.now());
+            containerInfo.setUpdateTime(now);
         });
         baseMapper.updateOrInsertBatch(containerInfoList);
         log.info("主机对应的容器id更新完毕");
