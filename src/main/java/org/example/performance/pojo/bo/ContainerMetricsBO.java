@@ -52,10 +52,10 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
     }
 
     /**
-     * ID
+     * 容器唯一ID
      */
     @TableId(type = IdType.AUTO)
-    private Integer id;
+    private Long code;
 
     /**
      * 容器ID
@@ -115,9 +115,6 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
      * @return
      */
     public BigDecimal getValue(Type field, BigDecimal memSize) {
-        if (memSize == null || memSize.compareTo(BigDecimal.ZERO) == 0) {
-            throw new BusinessException(CodeMsg.PARAMETER_ERROR);
-        }
         BigDecimal result;
         if (Type.MEM.equals(field)) {
             result = this.memUsedSize;
@@ -126,7 +123,7 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
         } else if (Type.DISK.equals(field)) {
             result = this.diskUsedSize;
         } else if (Type.MEM_RATE.equals(field)) {
-            if (memUsedSize == null) {
+            if (memUsedSize == null || memSize == null || memSize.compareTo(BigDecimal.ZERO) == 0) {
                 return null;
             }
             result = this.memUsedSize.divide(memSize, 1, RoundingMode.HALF_UP);
@@ -151,6 +148,30 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
                 return this.cpuRate;
             case "disk":
                 return this.diskUsedSize;
+            default:
+                log.error("不支持的字段：{}", field);
+                throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+        }
+
+    }
+
+    /**
+     * 通过字符串字段类型设置对应的值
+     *
+     * @param field
+     * @return
+     */
+    public void setValue(String field, BigDecimal value) {
+        switch (field) {
+            case "mem":
+                this.memUsedSize = value;
+                break;
+            case "cpu":
+                this.cpuRate = value;
+                break;
+            case "disk":
+                this.diskUsedSize = value;
+                break;
             default:
                 log.error("不支持的字段：{}", field);
                 throw new BusinessException(CodeMsg.PARAMETER_ERROR);

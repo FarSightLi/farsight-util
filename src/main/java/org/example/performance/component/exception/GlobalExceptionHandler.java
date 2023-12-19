@@ -21,6 +21,9 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result handleMyCustomException(BusinessException ex) {
+        StackTraceElement caller = ex.getStackTrace()[0];
+        String locationInfo = caller.getClassName() + "." + caller.getMethodName() + "() at line " + caller.getLineNumber();
+        log.info(locationInfo);
         log.info("全局异常处理生效" + ex.getMessage());
         return Result.error(ex);
     }
