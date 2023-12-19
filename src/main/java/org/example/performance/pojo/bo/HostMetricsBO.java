@@ -1,6 +1,5 @@
 package org.example.performance.pojo.bo;
 
-import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
@@ -19,11 +18,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * 主机指标表
- *
- * @TableName host_metrics
+ * 主机指标BO
  */
-@TableName(value = "host_metrics")
 @Data
 @Slf4j
 public class HostMetricsBO implements Serializable, HasUpdateTime {
@@ -36,7 +32,6 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
     /**
      * ID
      */
-    @TableId(type = IdType.AUTO)
     private Integer id;
 
     /**
@@ -47,13 +42,11 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
     /**
      * 主机Ip
      */
-    @TableField(exist = false)
     private String hostIp;
 
     /**
      * 磁盘信息
      */
-    @TableField(exist = false)
     private List<DiskInfo> diskInfoList;
 
     /**
@@ -112,10 +105,8 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @JsonSerialize(using = LocalDateTimeSerializer.class)
     @JsonDeserialize(using = LocalDateTimeDeserializer.class)
-    @TableField(fill = FieldFill.UPDATE)
     private LocalDateTime updateTime;
 
-    @TableField(exist = false)
     private static final long serialVersionUID = 1L;
 
     /**

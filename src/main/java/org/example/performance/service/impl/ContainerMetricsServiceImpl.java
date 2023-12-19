@@ -1,11 +1,9 @@
 package org.example.performance.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
-import org.example.performance.mapper.ContainerMetricsMapper;
 import org.example.performance.pojo.bo.ContainerMetricsBO;
 import org.example.performance.pojo.po.AlertRule;
 import org.example.performance.pojo.po.ContainerInfo;
@@ -36,8 +34,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMapper, ContainerMetricsBO>
-        implements ContainerMetricsService {
+public class ContainerMetricsServiceImpl implements ContainerMetricsService {
     @Resource
     private ContainerInfoService containerInfoService;
     @Resource
@@ -46,13 +43,6 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
     private AlertRuleService alertRuleService;
     @Resource
     private MetricRecordService metricRecordService;
-
-    @Override
-    public void insertBatch(List<ContainerMetricsBO> containerMetricsBOList) {
-        containerMetricsBOList.forEach(containerMetrics -> containerMetrics.setUpdateTime(LocalDateTime.now()));
-        baseMapper.insertBatch(containerMetricsBOList);
-    }
-
     @Override
     public List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);

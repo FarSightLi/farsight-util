@@ -3,10 +3,8 @@ package org.example.performance.demo;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.XmlUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.example.performance.mapper.HostMetricsMapper;
 import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.service.HostInfoService;
-import org.example.performance.service.HostMetricsService;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.w3c.dom.Document;
@@ -34,10 +32,6 @@ import java.util.stream.Collectors;
 public class DemoTest {
     @Resource
     private HostInfoService hostInfoService;
-    @Resource
-    private HostMetricsService hostMetricsService;
-    @Resource
-    private HostMetricsMapper metricsMapper;
 
     @Test
     public void test1() {
@@ -67,7 +61,7 @@ public class DemoTest {
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
-        List<HostMetricsBO> hostMetricsBOList = metricsMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
+        List<HostMetricsBO> hostMetricsBOList = new ArrayList<>();
         if (ObjectUtil.isEmpty(hostMetricsBOList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
         }

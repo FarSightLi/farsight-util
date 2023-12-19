@@ -1,10 +1,8 @@
 package org.example.performance.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.example.performance.mapper.HostMetricsMapper;
 import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.pojo.po.AlertRule;
 import org.example.performance.pojo.vo.HostMetricsVO;
@@ -29,25 +27,13 @@ import java.util.stream.Collectors;
  */
 @Service
 @Slf4j
-public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostMetricsBO>
-        implements HostMetricsService {
+public class HostMetricsServiceImpl implements HostMetricsService {
     @Resource
     private HostInfoService hostInfoService;
     @Resource
     private AlertRuleService alertRuleService;
     @Resource
     private MetricRecordService metricRecordService;
-
-    @Override
-    public void insertBatch(List<HostMetricsBO> hostMetricsBOList) {
-        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(hostMetricsBOList.stream().map(HostMetricsBO::getHostIp).collect(Collectors.toList()));
-        hostMetricsBOList.forEach(hostMetrics -> {
-            hostMetrics.setHostId(ip2IdMap.get(hostMetrics.getHostIp()));
-            hostMetrics.setUpdateTime(LocalDateTime.now());
-        });
-        baseMapper.insertBatch(hostMetricsBOList);
-    }
-
     @Override
     public List<HostMetricsVO> getMetricsVO(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<String> ipList = new ArrayList<>();
