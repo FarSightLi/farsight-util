@@ -1,6 +1,7 @@
 package org.example.performance.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.example.performance.pojo.bo.ContainerMetricsBO;
 import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.pojo.po.MetricRecord;
 
@@ -13,5 +14,7 @@ import java.util.List;
  */
 public interface MetricRecordService extends IService<MetricRecord> {
     void insertHostBatch(List<HostMetricsBO> hostMetricsBOList);
+
+    void insertContainerBatch(List<ContainerMetricsBO> containerMetricsBOList);
 
 }

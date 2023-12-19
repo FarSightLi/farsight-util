@@ -1,13 +1,18 @@
 package org.example.performance.service.impl;
 
 import cn.hutool.core.util.IdUtil;
+import cn.hutool.core.util.ObjectUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.exception.BusinessException;
+import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.mapper.ContainerInfoMapper;
 import org.example.performance.pojo.po.ContainerInfo;
 import org.example.performance.service.ContainerInfoService;
 import org.example.performance.service.HostInfoService;
+import org.springframework.data.redis.core.HashOperations;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +21,7 @@ import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -29,6 +35,12 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
         implements ContainerInfoService {
     @Resource
     private HostInfoService hostInfoService;
+    @Resource
+    private RedisTemplate<String, String> redisTemplate;
+    //    @Resource
+//    private HashOperations<String, String, Long> hashOperations;
+    private static final String ID_CODE_KEY = "container:id_code";
+
 
     @Override
     public Map<String, List<String>> getContainerId(List<String> ipList) {
@@ -69,6 +81,39 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
     public List<ContainerInfo> getListByContainerIdList(List<String> containerIdList) {
         return baseMapper.selectList(new LambdaQueryWrapper<ContainerInfo>().in(ContainerInfo::getContainerId, containerIdList));
     }
+
+    @Override
+    public Long getCodeByContainerId(String containerId) {
+        HashOperations<String, String, Long> opsedForHash = redisTemplate.opsForHash();
+        Long code = opsedForHash.get(ID_CODE_KEY, containerId);
+        if (ObjectUtil.isNotEmpty(code)) {
+            return code;
+        } else {
+            Map<String, Long> id2CodeMap = getAndFreshId2CodeMap();
+            return Optional.ofNullable(id2CodeMap.get(containerId))
+                    .orElseThrow(() -> {
+                        log.error("未在数据库中查询到容器{}的code信息", containerId);
+                        return new BusinessException(CodeMsg.SYSTEM_ERROR);
+                    });
+        }
+    }
+
+    /**
+     * 获得容器id对应code的map，并刷新redis缓存
+     *
+     * @return
+     */
+    private Map<String, Long> getAndFreshId2CodeMap() {
+        HashOperations<String, String, Long> opsedForHash = redisTemplate.opsForHash();
+        Map<String, Long> map = lambdaQuery().select(ContainerInfo::getContainerId, ContainerInfo::getId).list()
+                .stream().collect(Collectors.toMap(ContainerInfo::getContainerId, ContainerInfo::getId));
+        // 容器信息较多，设计为hash类型缓存更合适
+        opsedForHash.putAll(ID_CODE_KEY, map);
+        log.info("容器id2Code缓存已刷新");
+        return map;
+    }
+
+
 }
 
 

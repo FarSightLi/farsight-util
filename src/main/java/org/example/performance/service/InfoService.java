@@ -1,6 +1,7 @@
 package org.example.performance.service;
 
 import cn.hutool.core.util.CharsetUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.extra.ssh.JschUtil;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -131,7 +132,7 @@ public class InfoService {
         try {
             String details = execCmd(session, String.format("docker ps -a --format json  --filter 'id=%s'  --size", containerId));
             HashMap<String, String> detailsMap = new ObjectMapper().readValue(details, HashMap.class);
-            containerMetricsBO.setState(detailsMap.get("State"));
+            containerMetricsBO.setState(getState(detailsMap.get("State"), containerId, ip));
             String cpuRate = execCmd(session, String.format("docker stats %s --no-stream | awk 'NR>1 {print $3} '", containerId));
             containerMetricsBO.setCpuRate(DataUtil.string2Decimal(removePercent(cpuRate)));
             String onlineTime = execCmd(session, String.format("docker inspect --format '{{.State.StartedAt}}' %s", containerId));
@@ -141,21 +142,31 @@ public class InfoService {
             containerMetricsBO.setMemUsedSize(parseDataSize(memUsedSize));
             containerMetricsBO.setDiskUsedSize(parseDataSize(diskUsedSize));
             log.info(ip + " 的 " + containerMetricsBO.getContainerId() + ":\n" + new ObjectMapper().writeValueAsString(containerMetricsBO));
-        } catch (JsonProcessingException e) {
-            log.error("json解析出错---" + e.getMessage());
         } catch (Exception e) {
             log.error("{}的{}容器性能指标出错了", ip, containerMetricsBO.getContainerId());
             log.error(e.toString(), e);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "容器性能获取失败");
         }
         return containerMetricsBO;
     }
 
 
     private String execCmd(Session session, String cmd) {
-        if (session == null) {
-            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "session为空了");
+        if (session.isConnected()) {
+            return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8).trim();
+        } else {
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "jsch session已经关闭");
         }
-        return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8).trim();
+    }
+
+    private Integer getState(String statusStr, String containerId, String ip) {
+        if (ObjectUtil.isNotEmpty(statusStr)) {
+            return ContainerMetricsBO.getStatusMap().get(statusStr);
+        } else {
+            log.error("没有获取到{}的{}容器的status", ip, containerId);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "没有获取到容器的status");
+        }
+
     }
 
     /**

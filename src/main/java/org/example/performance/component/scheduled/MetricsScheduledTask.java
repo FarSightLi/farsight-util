@@ -156,8 +156,7 @@ public class MetricsScheduledTask {
         }));
         containerFutures.forEach(CompletableFuture::join);
         log.info("容器性能指标:" + containerMetricsBOList);
-        // TODO 更改实现方式
-        containerMetricsService.insertBatch(containerMetricsBOList);
+        metricRecordService.insertContainerBatch(containerMetricsBOList);
         log.info("所有容器性能指标采集完毕");
     }
 

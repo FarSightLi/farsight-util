@@ -30,4 +30,13 @@ public interface ContainerInfoService extends IService<ContainerInfo> {
     void updateOrInsertContainer(List<ContainerInfo> containerInfoList);
 
     List<ContainerInfo> getListByContainerIdList(List<String> containerIdList);
+
+    /**
+     * 获得容器id对应的全局唯一id uniqueCode
+     * <p>
+     * 如果此容器id无法对应一个uniqueCode，则会抛出异常
+     *
+     * @return
+     */
+    Long getCodeByContainerId(String containerId);
 }
