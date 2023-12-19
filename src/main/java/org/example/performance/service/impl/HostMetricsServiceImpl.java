@@ -11,6 +11,7 @@ import org.example.performance.pojo.vo.HostMetricsVO;
 import org.example.performance.service.AlertRuleService;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.service.HostMetricsService;
+import org.example.performance.service.MetricRecordService;
 import org.example.performance.util.MyUtil;
 import org.springframework.stereotype.Service;
 
@@ -34,6 +35,8 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
     private HostInfoService hostInfoService;
     @Resource
     private AlertRuleService alertRuleService;
+    @Resource
+    private MetricRecordService metricRecordService;
 
     @Override
     public void insertBatch(List<HostMetricsBO> hostMetricsBOList) {
@@ -50,16 +53,15 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
-        // TODO 更改实现 下一次提交实现
-        List<HostMetricsBO> hostMetricsBOList = baseMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
-        if (ObjectUtil.isEmpty(hostMetricsBOList)) {
+        List<HostMetricsBO> hostMetricBOList = metricRecordService.getHostMetricBOList(ip2IdMap.get(ip), startTime, endTime);
+        if (ObjectUtil.isEmpty(hostMetricBOList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);
             return Collections.emptyList();
         }
 
         Integer interval = MyUtil.getInterval(startTime, endTime);
         // 根据时间间隔过滤后的性能指标列表
-        List<HostMetricsBO> filterHostMetricsBOList = MyUtil.filterListByTime(hostMetricsBOList, interval);
+        List<HostMetricsBO> filterHostMetricsBOList = MyUtil.filterListByTime(hostMetricBOList, interval);
 
         // 时间对应的性能信息map(极小概率会出现同一时间有多条性能数据)
         Map<LocalDateTime, HostMetricsBO> map = filterHostMetricsBOList.stream()
@@ -93,7 +95,7 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
         dataList.add(new Data("host.disk.inode.rate", "inode", "主机磁盘INODE使用率(/data，%)", HostMetricsBO.Type.INODE));
         dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetricsBO.Type.BYOUT));
         map.forEach((time, info) -> dataList.forEach(data -> voList.add(createHostMetricsVO(data.desc,
-                data.name, data.type, info.getInfoByType(data.fieldType), info.getUpdateTime(),
+                data.name, data.type, info.getValueByType(data.fieldType), info.getUpdateTime(),
                 finalAlertMap.getOrDefault(data.name, new AlertRule()).getWarningValue(),
                 finalAlertMap.getOrDefault(data.name, new AlertRule()).getErrorValue()))));
         return voList;

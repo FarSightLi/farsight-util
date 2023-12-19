@@ -51,7 +51,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
             MetricRecord metricRecord = new MetricRecord();
             metricRecord.setMetricId(id);
             metricRecord.setMetricOrigin(ip2IdMap.get(bo.getHostIp()));
-            metricRecord.setMetricValue(bo.getInfoByType(type).toString());
+            metricRecord.setMetricValue(bo.getValueByType(type).toString());
             metricRecord.setUpdateTime(now);
             metricRecordList.add(metricRecord);
         }));
@@ -87,7 +87,26 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
 
     @Override
     public List<HostMetricsBO> getHostMetricBOList(Long id, LocalDateTime startTime, LocalDateTime endTime) {
-        return null;
+        // 时间 对应 记录的map
+        Map<LocalDateTime, List<MetricRecord>> time2RecordMap = lambdaQuery()
+                .eq(MetricRecord::getMetricOrigin, id)
+                .between(MetricRecord::getUpdateTime, startTime, endTime)
+                .select(MetricRecord::getMetricId, MetricRecord::getMetricOrigin, MetricRecord::getMetricValue, MetricRecord::getUpdateTime)
+                .list()
+                .stream()
+                .collect(Collectors.groupingBy(MetricRecord::getUpdateTime));
+        // 指标id 对应 type 的map
+        Map<Integer, String> metricId2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.Origin.HOST)
+                .stream().collect(Collectors.toMap(MetricConfig::getId, MetricConfig::getType));
+        List<HostMetricsBO> boList = new ArrayList<>(time2RecordMap.size());
+        time2RecordMap.forEach((time, recordList) -> {
+            HostMetricsBO bo = new HostMetricsBO();
+            bo.setUpdateTime(time);
+            // 设置各个值
+            recordList.forEach(metricRecord -> bo.setValue(metricId2TypeMap.get(metricRecord.getMetricId()), DataUtil.string2Decimal(metricRecord.getMetricValue())));
+            boList.add(bo);
+        });
+        return boList;
     }
 
     @Override

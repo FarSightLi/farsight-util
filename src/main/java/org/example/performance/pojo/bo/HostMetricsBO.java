@@ -124,7 +124,7 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
      * @param type 字段枚举
      * @return 返回字段对应的值
      */
-    public BigDecimal getInfoByType(Type type) {
+    public BigDecimal getValueByType(Type type) {
         if (Type.MEM.equals(type)) {
             return mem;
         } else if (Type.BYTIN.equals(type)) {
@@ -157,7 +157,7 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
      * @param type 字段类型
      * @return 返回字段对应的值
      */
-    public BigDecimal getInfoByType(String type) {
+    public BigDecimal getValueByType(String type) {
         switch (type) {
             case "mem":
                 return mem;
@@ -179,6 +179,50 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
                 return inode;
             case "bytout":
                 return byteOut;
+            default:
+                log.error("不支持的字段类型{}", type);
+                throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+        }
+    }
+
+    /**
+     * 传入一个字段type来动态获得字段值
+     *
+     * @param type 字段类型
+     * @return 返回字段对应的值
+     */
+    public void setValue(String type, BigDecimal value) {
+        switch (type) {
+            case "mem":
+                mem = value;
+                break;
+            case "bytin":
+                byteIn = value;
+                break;
+            case "load":
+                hostLoad = value;
+                break;
+            case "cpu":
+                cpu = value;
+                break;
+            case "disk":
+                disk = value;
+                break;
+            case "tcp":
+                tcp = value;
+                break;
+            case "mem_rate":
+                memRate = value;
+                break;
+            case "io":
+                io = value;
+                break;
+            case "inode":
+                inode = value;
+                break;
+            case "bytout":
+                byteOut = value;
+                break;
             default:
                 log.error("不支持的字段类型{}", type);
                 throw new BusinessException(CodeMsg.SYSTEM_ERROR);
