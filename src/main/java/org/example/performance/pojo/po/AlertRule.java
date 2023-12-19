@@ -11,7 +11,6 @@ import java.math.BigDecimal;
 
 /**
  * 预警规则表
- *
  * @TableName alert_rule
  */
 @TableName(value = "alert_rule")
@@ -24,16 +23,6 @@ public class AlertRule implements Serializable {
     private Integer id;
 
     /**
-     * 预警项
-     */
-    private String metricName;
-
-    /**
-     * 指标描述
-     */
-    private String metricDesc;
-
-    /**
      * 严重阈值
      */
     private BigDecimal errorValue;
@@ -42,6 +31,11 @@ public class AlertRule implements Serializable {
      * 警告阈值
      */
     private BigDecimal warningValue;
+
+    /**
+     * 对应配置表中的指标id
+     */
+    private Integer configId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

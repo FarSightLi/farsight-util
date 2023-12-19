@@ -142,8 +142,8 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
             case "disk":
                 return this.diskUsedSize;
             default:
-                log.error("不支持的字段：{}", field);
-                throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+                log.warn("不支持的字段：{}", field);
+                return null;
         }
 
     }

@@ -19,6 +19,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -76,10 +77,14 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
                 metricRecord.setMetricValue(bo.getRestartTime().format(DateTimeFormatter.ofPattern("yyyy-MM-dd hh:mm:ss")));
             } else {
                 // 其他小数数据可统一获得
-                metricRecord.setMetricValue(bo.getValueByStr(type).toString());
+                metricRecord.setMetricValue(Optional.ofNullable(bo.getValueByStr(type)).map(Object::toString).orElse(null));
             }
             metricRecord.setUpdateTime(now);
-            metricRecordList.add(metricRecord);
+            // 无法获得的数据就不进行保存（即在配置表中的字段无法对应BO的字段）
+            // 意味着这些字段不必入库
+            if (metricRecord.getMetricValue() != null) {
+                metricRecordList.add(metricRecord);
+            }
         }));
         baseMapper.insertBatch(metricRecordList);
 

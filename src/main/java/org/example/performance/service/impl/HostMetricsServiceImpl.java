@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -52,15 +55,10 @@ public class HostMetricsServiceImpl implements HostMetricsService {
         // 时间对应的性能信息map(极小概率会出现同一时间有多条性能数据)
         Map<LocalDateTime, HostMetricsBO> map = filterHostMetricsBOList.stream()
                 .collect(Collectors.toMap(HostMetricsBO::getUpdateTime, Function.identity(), (old, replace) -> replace));
-        List<AlertRule> alertRuleList = alertRuleService.list();
         // 告警信息map
-        Map<String, AlertRule> alertMap = new HashMap<>(alertRuleList.size());
-        if (ObjectUtil.isNotEmpty(alertRuleList)) {
-            alertMap = alertRuleList.stream().collect(Collectors.toMap(AlertRule::getMetricName, Function.identity()));
-        }
+        Map<String, AlertRule> alertMap = alertRuleService.getRuleMap();
         List<HostMetricsVO> voList = new ArrayList<>();
         // 给lambda使用的map
-        Map<String, AlertRule> finalAlertMap = alertMap;
         @lombok.Data
         @AllArgsConstructor
         class Data {
@@ -82,8 +80,8 @@ public class HostMetricsServiceImpl implements HostMetricsService {
         dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetricsBO.Type.BYOUT));
         map.forEach((time, info) -> dataList.forEach(data -> voList.add(createHostMetricsVO(data.desc,
                 data.name, data.type, info.getValueByType(data.fieldType), info.getUpdateTime(),
-                finalAlertMap.getOrDefault(data.name, new AlertRule()).getWarningValue(),
-                finalAlertMap.getOrDefault(data.name, new AlertRule()).getErrorValue()))));
+                alertMap.getOrDefault(data.name, new AlertRule()).getWarningValue(),
+                alertMap.getOrDefault(data.name, new AlertRule()).getErrorValue()))));
         return voList;
     }
 

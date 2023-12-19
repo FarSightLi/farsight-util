@@ -43,6 +43,8 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
     private AlertRuleService alertRuleService;
     @Resource
     private MetricRecordService metricRecordService;
+    @Resource
+    private MetricConfigService metricConfigService;
     @Override
     public List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
@@ -108,7 +110,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         // 容器code对应的指标数据
         Map<Long, List<ContainerMetricsBO>> metricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getCode));
         List<ContainerTrendVO> voList = new ArrayList<>();
-        Map<String, AlertRule> ruleMap = alertRuleService.list().stream().collect(Collectors.toMap(AlertRule::getMetricName, Function.identity()));
+        Map<String, AlertRule> ruleMap = alertRuleService.getRuleMap();
         infoMap.forEach((id, info) -> {
             voList.add(getContainerTrendVO(ContainerMetricsBO.Type.MEM, ruleMap, info, metricsMap.get(id)));
             voList.add(getContainerTrendVO(ContainerMetricsBO.Type.DISK, ruleMap, info, metricsMap.get(id)));
@@ -237,7 +239,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
             return;
         }
         // 预警名字对应详细信息的map
-        Map<String, AlertRule> ruleMap = ruleList.stream().collect(Collectors.toMap(AlertRule::getMetricName, Function.identity()));
+        Map<String, AlertRule> ruleMap = alertRuleService.getRuleMap();
         // CPU率
         setAlertState(vo, ContainerInfoVO.Field.CPU, "container.cpu.rate", ruleMap);
         // Mem率
@@ -261,7 +263,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
 
     private Integer getRateState(BigDecimal rate, BigDecimal errorValue, BigDecimal warningValue) {
         int state;
-        if (rate == null) {
+        if (rate == null || errorValue == null || warningValue == null) {
             return null;
         }
         if (rate.compareTo(errorValue) > 0) {
@@ -317,7 +319,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
             list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
             BigDecimal value = e.getValue(type, memSize);
             if (value == null) {
-                log.error("容器性能记录{}为null，记录id为{}", type, e.getCode());
+                log.warn("容器性能记录{}为null，容器id为{}", type, e.getCode());
             } else {
                 list.add(value);
             }

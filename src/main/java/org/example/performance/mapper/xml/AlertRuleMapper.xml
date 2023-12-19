@@ -6,14 +6,13 @@
 
     <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.AlertRule">
         <id property="id" column="id" jdbcType="INTEGER"/>
-        <result property="metricName" column="metric_name" jdbcType="VARCHAR"/>
-        <result property="metricDesc" column="metric_desc" jdbcType="VARCHAR"/>
         <result property="errorValue" column="error_value" jdbcType="DECIMAL"/>
         <result property="warningValue" column="warning_value" jdbcType="DECIMAL"/>
+        <result property="configId" column="config_id" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,metric_name,metric_desc,
-        error_value,warning_value
+        id,error_value,warning_value,
+        config_id
     </sql>
 </mapper>
