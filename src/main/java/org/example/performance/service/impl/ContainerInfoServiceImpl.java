@@ -22,6 +22,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 /**
@@ -109,6 +110,7 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
                 .stream().collect(Collectors.toMap(ContainerInfo::getContainerId, ContainerInfo::getId));
         // 容器信息较多，设计为hash类型缓存更合适
         opsedForHash.putAll(ID_CODE_KEY, map);
+        redisTemplate.expire(ID_CODE_KEY, 10L, TimeUnit.MINUTES);
         log.info("容器id2Code缓存已刷新");
         return map;
     }

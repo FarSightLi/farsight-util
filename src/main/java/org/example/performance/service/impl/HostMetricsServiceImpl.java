@@ -50,6 +50,7 @@ public class HostMetricsServiceImpl extends ServiceImpl<HostMetricsMapper, HostM
         List<String> ipList = new ArrayList<>();
         ipList.add(ip);
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
+        // TODO 更改实现 下一次提交实现
         List<HostMetricsBO> hostMetricsBOList = baseMapper.selectByHostId(ip2IdMap.get(ip), startTime, endTime);
         if (ObjectUtil.isEmpty(hostMetricsBOList)) {
             log.info("ip:{}在{}和{}时段没有性能信息", ip, startTime, endTime);

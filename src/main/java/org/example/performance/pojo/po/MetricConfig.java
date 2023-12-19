@@ -22,14 +22,18 @@ public class MetricConfig implements Serializable {
         SERVICE(3),
         CLUSTER(4);
 
-        private final int value;
+        private final Integer value;
 
-        Origin(int value) {
+        Origin(Integer value) {
             this.value = value;
         }
 
-        public int getValue() {
+        public Integer getValue() {
             return value;
+        }
+
+        public String getValueStr() {
+            return value.toString();
         }
     }
 

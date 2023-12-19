@@ -284,6 +284,7 @@ public class ContainerMetricsServiceImpl extends ServiceImpl<ContainerMetricsMap
             throw new BusinessException(CodeMsg.SYSTEM_ERROR);
         }
         List<ContainerInfo> containerInfoList = containerInfoService.getListByContainerIdList(containerIdList);
+        // TODO 更改实现
         List<ContainerMetricsBO> metricsList = baseMapper.getByContainerIdList(containerIdList, startTime, endTime);
         Map<String, List<ContainerMetricsBO>> groupByContainerId = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getContainerId));
         List<ContainerMetricsBO> newMetricsList = new ArrayList<>();
