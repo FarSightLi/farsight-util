@@ -40,7 +40,8 @@ public class SecurityController {
      */
     @PostMapping("/login")
     public Result<String> login(@RequestBody AccountDTO accountDTO) {
-        if (userAccountService.lambdaQuery().eq(UserAccount::getUserName, accountDTO.getUserName()).eq(UserAccount::getPwd, accountDTO.getPwd()).count() == 1L) {
+        String md5 = userAccountService.aesToMd5(accountDTO.getPwd());
+        if (userAccountService.lambdaQuery().eq(UserAccount::getUserName, accountDTO.getUserName()).eq(UserAccount::getPwd, md5).count() == 1L) {
             HashMap<String, Object> payloadMap = new HashMap<>(0);
             return Result.success(JWTUtil.createToken(payloadMap, secret.getBytes()));
         } else {
@@ -56,9 +57,13 @@ public class SecurityController {
      */
     @PostMapping("/sign")
     public Result<String> sign(@RequestBody AccountDTO accountDTO) {
+        String md5 = userAccountService.aesToMd5(accountDTO.getPwd());
         if (userAccountService.lambdaQuery().eq(UserAccount::getUserName, accountDTO.getUserName()).count() == 0) {
             HashMap<String, Object> payloadMap = new HashMap<>(0);
-            userAccountService.lambdaUpdate().set(UserAccount::getUserName, accountDTO.getUserName()).set(UserAccount::getPwd, accountDTO.getPwd()).update();
+            UserAccount userAccount = new UserAccount();
+            userAccount.setUserName(accountDTO.getUserName());
+            userAccount.setPwd(md5);
+            userAccountService.save(userAccount);
             return Result.success(JWTUtil.createToken(payloadMap, secret.getBytes()));
         } else {
             return Result.error(CodeMsg.PARAMETER_ERROR, "用户名已注册");

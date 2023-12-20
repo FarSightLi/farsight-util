@@ -9,5 +9,6 @@ import org.example.performance.pojo.po.UserAccount;
  * @createDate 2023-12-18 16:53:27
  */
 public interface UserAccountService extends IService<UserAccount> {
+    String aesToMd5(String aesPwd);
 
 }
