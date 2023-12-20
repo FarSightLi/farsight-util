@@ -2,7 +2,9 @@ package org.example.performance.demo;
 
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.XmlUtil;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.FileWatcher;
 import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.service.HostInfoService;
 import org.junit.jupiter.api.Test;
@@ -32,6 +34,12 @@ import java.util.stream.Collectors;
 public class DemoTest {
     @Resource
     private HostInfoService hostInfoService;
+
+    @SneakyThrows
+    @Test
+    public void file() {
+        FileWatcher fileWatcher = new FileWatcher();
+    }
 
     @Test
     public void test1() {

@@ -4,9 +4,9 @@ import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.extra.ssh.JschUtil;
 import com.jcraft.jsch.Session;
 import lombok.extern.slf4j.Slf4j;
+import org.example.performance.component.FileWatcher;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
-import org.example.performance.component.scheduled.HostXmlScheduledTask;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -22,7 +22,7 @@ public class SessionConfig {
     }
 
     public static Session getSession(String ip) {
-        List<String> infoList = HostXmlScheduledTask.getHostMap().get(ip);
+        List<String> infoList = FileWatcher.getHostMap().get(ip);
         if (ObjectUtil.isEmpty(infoList)) {
             log.error("{}没有主机账号密码信息", ip);
             throw new BusinessException(CodeMsg.SYSTEM_ERROR, "没有主机账号密码信息");

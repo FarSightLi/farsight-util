@@ -2,6 +2,7 @@ package org.example.performance.component.scheduled;
 
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.CacheInfo;
+import org.example.performance.component.FileWatcher;
 import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.config.SessionConfig;
@@ -12,7 +13,6 @@ import org.example.performance.pojo.po.ContainerInfo;
 import org.example.performance.pojo.po.DiskInfo;
 import org.example.performance.pojo.po.HostInfo;
 import org.example.performance.service.*;
-import org.springframework.context.annotation.DependsOn;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -27,21 +27,16 @@ import java.util.stream.Collectors;
 
 @Component
 @Slf4j
-@DependsOn("hostXmlScheduledTask")
 public class MetricsScheduledTask {
     private final InfoService infoService = new InfoService();
     @Resource
     private HostInfoService hostInfoService;
     @Resource
-    private HostMetricsService hostMetricsService;
-    @Resource
     private DiskInfoService diskInfoService;
     @Resource
     private ContainerInfoService containerInfoService;
     @Resource
-    private ContainerMetricsService containerMetricsService;
-    @Resource
-    private HostXmlScheduledTask hostXmlScheduledTask;
+    private FileWatcher fileWatcher;
     @Resource
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
@@ -54,7 +49,7 @@ public class MetricsScheduledTask {
 
     @PostConstruct
     public void init() {
-        hostXmlScheduledTask.read();
+        fileWatcher.read();
         log.info("采集任务前获得主机账号密码");
     }
 

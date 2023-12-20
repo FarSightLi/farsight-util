@@ -43,8 +43,6 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
     private AlertRuleService alertRuleService;
     @Resource
     private MetricRecordService metricRecordService;
-    @Resource
-    private MetricConfigService metricConfigService;
     @Override
     public List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);

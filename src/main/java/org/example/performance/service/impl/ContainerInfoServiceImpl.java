@@ -11,7 +11,6 @@ import org.example.performance.mapper.ContainerInfoMapper;
 import org.example.performance.pojo.po.ContainerInfo;
 import org.example.performance.service.ContainerInfoService;
 import org.example.performance.service.HostInfoService;
-import org.springframework.data.redis.core.HashOperations;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,9 +36,7 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
     @Resource
     private HostInfoService hostInfoService;
     @Resource
-    private RedisTemplate<String, String> redisTemplate;
-    //    @Resource
-//    private HashOperations<String, String, Long> hashOperations;
+    private RedisTemplate<String, Long> redisTemplate;
     private static final String ID_CODE_KEY = "container:id_code";
 
 
@@ -85,8 +82,7 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
 
     @Override
     public Long getCodeByContainerId(String containerId) {
-        HashOperations<String, String, Long> opsedForHash = redisTemplate.opsForHash();
-        Long code = opsedForHash.get(ID_CODE_KEY, containerId);
+        Long code = redisTemplate.opsForValue().get(ID_CODE_KEY + ":" + containerId);
         if (ObjectUtil.isNotEmpty(code)) {
             return code;
         } else {
@@ -105,12 +101,10 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
      * @return
      */
     private Map<String, Long> getAndFreshId2CodeMap() {
-        HashOperations<String, String, Long> opsedForHash = redisTemplate.opsForHash();
         Map<String, Long> map = lambdaQuery().select(ContainerInfo::getContainerId, ContainerInfo::getId).list()
                 .stream().collect(Collectors.toMap(ContainerInfo::getContainerId, ContainerInfo::getId));
         // 容器信息较多，设计为hash类型缓存更合适
-        opsedForHash.putAll(ID_CODE_KEY, map);
-        redisTemplate.expire(ID_CODE_KEY, 10L, TimeUnit.MINUTES);
+        map.forEach((k, v) -> redisTemplate.opsForValue().set(ID_CODE_KEY + ":" + k, v, 10L, TimeUnit.MINUTES));
         log.info("容器id2Code缓存已刷新");
         return map;
     }

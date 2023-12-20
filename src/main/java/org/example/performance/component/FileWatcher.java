@@ -1,15 +1,14 @@
-package org.example.performance.component.scheduled;
+package org.example.performance.component;
 
 import cn.hutool.core.util.XmlUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.example.performance.component.CacheInfo;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import javax.xml.xpath.XPathConstants;
+import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -17,22 +16,38 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
 
-
 /**
  * @author lilongsheng
  * @version 1.0
  * @project performance
- * @description 定时读取xml中主机账号密码
- * @date 2023/12/11 17:49:30
+ * @description 监听文件变动
+ * @date 2023/12/20 16:29:10
  */
-@Component
 @Slf4j
-public class HostXmlScheduledTask {
+@Component
+public class FileWatcher {
     private static final ConcurrentHashMap<String, List<String>> HOST_MAP = new ConcurrentHashMap<>();
 
-    @Scheduled(fixedRate = 30 * 60 * 1000) // 30min
-    public void readXml() {
-        read();
+    public void watch() throws Exception {
+        Path path = Paths.get("src/main/resources/host/hosts.xml");
+
+        try (WatchService watchService = FileSystems.getDefault().newWatchService()) {
+            path.getParent().register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+
+            while (true) {
+                WatchKey key = watchService.take();
+
+                for (WatchEvent<?> event : key.pollEvents()) {
+                    if (event.kind() == StandardWatchEventKinds.ENTRY_MODIFY) {
+                        Path changed = (Path) event.context();
+                        if (changed.endsWith("hosts.xml")) {
+                            read();
+                        }
+                    }
+                }
+                key.reset();
+            }
+        }
     }
 
     public static ConcurrentMap<String, List<String>> getHostMap() {
