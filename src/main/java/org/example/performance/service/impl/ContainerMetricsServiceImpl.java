@@ -12,7 +12,7 @@ import org.example.performance.pojo.vo.ContainerInfoVO;
 import org.example.performance.pojo.vo.ContainerTrendVO;
 import org.example.performance.service.*;
 import org.example.performance.util.DataUtil;
-import org.example.performance.util.MyUtil;
+import org.example.performance.util.ServiceUtil;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
@@ -285,7 +285,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
      * @return List<Object> 0号位是容器信息，1号位是容器性能
      */
     private List<Object> getInfoAndMetricsList(String ip, LocalDateTime startTime, LocalDateTime endTime) {
-        Integer interval = MyUtil.getInterval(startTime, endTime);
+        Integer interval = ServiceUtil.getInterval(startTime, endTime);
         List<String> ips = new ArrayList<>();
         ips.add(ip);
         // ip 对应 容器id 的map
@@ -302,7 +302,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         List<ContainerMetricsBO> newMetricsList = new ArrayList<>();
         // 根据时间间隔筛选数据
         groupByContainerId.forEach((k, v) -> {
-            newMetricsList.addAll(MyUtil.filterListByTime(v, interval));
+            newMetricsList.addAll(ServiceUtil.filterListByTime(v, interval));
         });
         List<Object> objects = new ArrayList<>();
         objects.add(containerInfoList);

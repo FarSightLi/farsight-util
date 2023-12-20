@@ -20,7 +20,7 @@ import java.util.stream.Collectors;
  * @date 2023/12/14 09:30:35
  */
 @Component
-public class MyUtil {
+public class ServiceUtil {
     public static Integer getInterval(LocalDateTime startTime, LocalDateTime endTime) {
         // 指定时间间隔（秒）
         int timeIntervalInSeconds;

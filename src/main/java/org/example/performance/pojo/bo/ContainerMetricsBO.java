@@ -129,9 +129,11 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
 
     /**
      * 通过字符串字段类型获得对应的值
+     * <p>
+     * 如果是不支持的字段就返回null
      *
      * @param field
-     * @return
+     * @return 对应的value
      */
     public BigDecimal getValueByStr(String field) {
         switch (field) {
@@ -152,7 +154,6 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
      * 通过字符串字段类型设置对应的值
      *
      * @param field
-     * @return
      */
     public void setValue(String field, BigDecimal value) {
         switch (field) {

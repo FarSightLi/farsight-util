@@ -7,7 +7,7 @@ import org.example.performance.pojo.vo.HostInfoVO;
 import org.example.performance.pojo.vo.HostMetricsVO;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.service.HostMetricsService;
-import org.example.performance.util.MyUtil;
+import org.example.performance.util.ServiceUtil;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
@@ -44,7 +44,7 @@ public class HostInfoController {
     public Result<List<HostMetricsVO>> getMetric(@RequestBody InfoDTO infoDTO) {
         LocalDateTime startTime = infoDTO.getStartTime();
         LocalDateTime endTime = infoDTO.getEndTime();
-        if (MyUtil.validTime(startTime, endTime)) {
+        if (ServiceUtil.validTime(startTime, endTime)) {
             return Result.error(CodeMsg.PARAMETER_ERROR, "时间间隔不正确");
         } else {
             return Result.success(hostMetricsService.getMetricsVO(infoDTO.getIp(), startTime, endTime));

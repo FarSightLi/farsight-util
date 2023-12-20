@@ -10,7 +10,7 @@ import org.example.performance.service.AlertRuleService;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.service.HostMetricsService;
 import org.example.performance.service.MetricRecordService;
-import org.example.performance.util.MyUtil;
+import org.example.performance.util.ServiceUtil;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -48,9 +48,9 @@ public class HostMetricsServiceImpl implements HostMetricsService {
             return Collections.emptyList();
         }
 
-        Integer interval = MyUtil.getInterval(startTime, endTime);
+        Integer interval = ServiceUtil.getInterval(startTime, endTime);
         // 根据时间间隔过滤后的性能指标列表
-        List<HostMetricsBO> filterHostMetricsBOList = MyUtil.filterListByTime(hostMetricBOList, interval);
+        List<HostMetricsBO> filterHostMetricsBOList = ServiceUtil.filterListByTime(hostMetricBOList, interval);
 
         // 时间对应的性能信息map(极小概率会出现同一时间有多条性能数据)
         Map<LocalDateTime, HostMetricsBO> map = filterHostMetricsBOList.stream()
