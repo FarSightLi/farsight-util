@@ -73,6 +73,8 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
         });
         baseMapper.updateOrInsertBatch(containerInfoList);
         log.info("主机对应的容器id更新完毕");
+        Map<String, Long> id2CodeMap = containerInfoList.stream().collect(Collectors.toMap(ContainerInfo::getContainerId, ContainerInfo::getId));
+        fresh(id2CodeMap);
     }
 
     @Override
@@ -103,12 +105,14 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
     private Map<String, Long> getAndFreshId2CodeMap() {
         Map<String, Long> map = lambdaQuery().select(ContainerInfo::getContainerId, ContainerInfo::getId).list()
                 .stream().collect(Collectors.toMap(ContainerInfo::getContainerId, ContainerInfo::getId));
-        // 容器信息较多，设计为hash类型缓存更合适
-        map.forEach((k, v) -> redisTemplate.opsForValue().set(ID_CODE_KEY + ":" + k, v, 10L, TimeUnit.MINUTES));
-        log.info("容器id2Code缓存已刷新");
+        fresh(map);
         return map;
     }
 
+    private void fresh(Map<String, Long> map) {
+        map.forEach((k, v) -> redisTemplate.opsForValue().set(ID_CODE_KEY + ":" + k, v, 10L, TimeUnit.MINUTES));
+        log.info("容器id2Code缓存已刷新");
+    }
 }
 
 

@@ -10,7 +10,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 20
+        size: 5
   jackson:
     date-format: "yyyy-MM-dd HH:mm:ss"
     time-zone: GMT+8
@@ -29,4 +29,4 @@ mybatis-plus:
   mapper-locations: classpath:xml/*.xml
   configuration:
     map-underscore-to-camel-case: true
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

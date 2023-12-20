@@ -14,7 +14,6 @@ import org.example.performance.pojo.po.DiskInfo;
 import org.example.performance.pojo.po.HostInfo;
 import org.example.performance.service.*;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -56,7 +55,6 @@ public class MetricsScheduledTask {
     /**
      * 获得主机信息
      */
-    @Async
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getSysInfoTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
@@ -88,7 +86,6 @@ public class MetricsScheduledTask {
     /**
      * 获得容器信息
      */
-    @Async
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getContainerInfoTask() {
         Map<String, List<String>> containerMap = getContainerMap();
@@ -110,7 +107,6 @@ public class MetricsScheduledTask {
     /**
      * 获得主机性能指标
      */
-    @Async
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getSysIndexTask() {
         List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
@@ -136,7 +132,6 @@ public class MetricsScheduledTask {
     /**
      * 获得容器性能指标
      */
-    @Async
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
         Map<String, List<String>> containerMap = getContainerMap();
