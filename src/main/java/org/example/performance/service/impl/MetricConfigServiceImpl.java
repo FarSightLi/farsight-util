@@ -32,13 +32,13 @@ public class MetricConfigServiceImpl extends ServiceImpl<MetricConfigMapper, Met
 
     private static final String METRIC_CONFIG_KEY = "metric_conf:type_id";
 
-    public Map<String, Integer> getMetricName2IdMapByType(MetricConfig.Type type) {
+    public Map<String, Integer> getMetricName2IdMapByType(MetricConfig.OriginType originType) {
         HashOperations<String, String, Map<String, Integer>> opsedForHash = redisTemplate.opsForHash();
-        Map<String, Integer> name2IdMap = opsedForHash.get(METRIC_CONFIG_KEY, type.getValueStr());
+        Map<String, Integer> name2IdMap = opsedForHash.get(METRIC_CONFIG_KEY, originType.getValueStr());
         if (ObjectUtil.isEmpty(name2IdMap)) {
-            log.info("redis缓存中没有{}对应的MetricConfig，查询数据库", type);
-            name2IdMap = getMetricConfigList(type).stream().collect(Collectors.toMap(MetricConfig::getMetricName, MetricConfig::getId));
-            opsedForHash.put(METRIC_CONFIG_KEY, type.getValueStr(), name2IdMap);
+            log.info("redis缓存中没有{}对应的MetricConfig，查询数据库", originType);
+            name2IdMap = getMetricConfigList(originType).stream().collect(Collectors.toMap(MetricConfig::getMetricName, MetricConfig::getId));
+            opsedForHash.put(METRIC_CONFIG_KEY, originType.getValueStr(), name2IdMap);
             redisTemplate.expire(METRIC_CONFIG_KEY, 10L, TimeUnit.MINUTES);
             log.info("指标配置Type对应id的缓存已刷新");
         }
@@ -46,11 +46,11 @@ public class MetricConfigServiceImpl extends ServiceImpl<MetricConfigMapper, Met
     }
 
     @Override
-    public List<MetricConfig> getMetricConfigList(MetricConfig.Type type) {
-        List<MetricConfig> list = lambdaQuery().eq(MetricConfig::getType, type.getValueStr()).list();
+    public List<MetricConfig> getMetricConfigList(MetricConfig.OriginType originType) {
+        List<MetricConfig> list = lambdaQuery().eq(MetricConfig::getType, originType.getValueStr()).list();
         if (ObjectUtil.isEmpty(list)) {
-            log.info("{}没有对应的配置信息", type);
-            throw new BusinessException(CodeMsg.SYSTEM_ERROR, type + "没有对应的配置信息");
+            log.info("{}没有对应的配置信息", originType);
+            throw new BusinessException(CodeMsg.SYSTEM_ERROR, originType + "没有对应的配置信息");
         }
         return list;
     }

@@ -39,7 +39,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
     public void insertHostBatch(List<HostMetricsBO> hostMetricsBOList) {
         List<String> ipList = hostMetricsBOList.stream().map(HostMetricsBO::getHostIp).collect(Collectors.toList());
         // name 和 id 的map
-        Map<String, Integer> name2IdMapByType = metricConfigService.getMetricName2IdMapByType(MetricConfig.Type.HOST);
+        Map<String, Integer> name2IdMapByType = metricConfigService.getMetricName2IdMapByType(MetricConfig.OriginType.HOST);
         // ip 和 主机id 的map
         Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
         // 每个bo会创建出10个Record
@@ -64,7 +64,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
     @Override
     public void insertContainerBatch(List<ContainerMetricsBO> containerMetricsBOList) {
         // type 和 id 的map
-        Map<String, Integer> metricType2IdMap = metricConfigService.getMetricName2IdMapByType(MetricConfig.Type.CONTAINER);
+        Map<String, Integer> metricType2IdMap = metricConfigService.getMetricName2IdMapByType(MetricConfig.OriginType.CONTAINER);
         // 每个bo会创建出5个Record
         List<MetricRecord> metricRecordList = new ArrayList<>(containerMetricsBOList.size() * 5);
         LocalDateTime now = LocalDateTime.now();
@@ -100,7 +100,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
                 .stream()
                 .collect(Collectors.groupingBy(MetricRecord::getMonitorTime));
         // 指标id 对应 name 的map
-        Map<Integer, String> metricId2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.Type.HOST)
+        Map<Integer, String> metricId2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.OriginType.HOST)
                 .stream().collect(Collectors.toMap(MetricConfig::getId, MetricConfig::getMetricName));
         List<HostMetricsBO> boList = new ArrayList<>(time2RecordMap.size());
         time2RecordMap.forEach((time, recordList) -> {
@@ -126,7 +126,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
         Map<Long, Map<LocalDateTime, List<MetricRecord>>> id2TimeRecordMap = id2RecordMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> entry.getValue().stream().collect(Collectors.groupingBy(MetricRecord::getMonitorTime))));
         // 指标id 对应 name 的map
-        Map<Integer, String> metricId2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.Type.CONTAINER)
+        Map<Integer, String> metricId2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.OriginType.CONTAINER)
                 .stream().collect(Collectors.toMap(MetricConfig::getId, MetricConfig::getMetricName));
         List<ContainerMetricsBO> boList = new ArrayList<>(id2TimeRecordMap.size());
         id2TimeRecordMap.forEach((code, map) -> map.forEach((time, recordList) -> {

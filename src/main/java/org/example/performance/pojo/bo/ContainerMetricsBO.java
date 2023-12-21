@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 容器性能BO
@@ -36,7 +37,7 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
         STATUS_MAP.put("dead", 7);
     }
 
-    public static HashMap<String, Integer> getStatusMap() {
+    public static Map<String, Integer> getStatusMap() {
         return STATUS_MAP;
     }
 

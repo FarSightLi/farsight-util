@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import lombok.Getter;
 
 import java.io.Serializable;
 
@@ -16,7 +17,8 @@ import java.io.Serializable;
 @TableName(value = "metric_config")
 @Data
 public class MetricConfig implements Serializable {
-    public enum Type {
+    @Getter
+    public enum OriginType {
         HOST(1),
         CONTAINER(2),
         SERVICE(3),
@@ -24,7 +26,7 @@ public class MetricConfig implements Serializable {
 
         private final Integer value;
 
-        Type(Integer value) {
+        OriginType(Integer value) {
             this.value = value;
         }
 
