@@ -1,7 +1,6 @@
 package org.example.performance.service.impl;
 
 import cn.hutool.core.util.ObjectUtil;
-import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.pojo.bo.HostMetricsBO;
 import org.example.performance.pojo.po.AlertRule;
@@ -16,10 +15,7 @@ import org.springframework.stereotype.Service;
 import javax.annotation.Resource;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -59,44 +55,22 @@ public class HostMetricsServiceImpl implements HostMetricsService {
         // 告警信息map
         Map<String, AlertRule> alertMap = alertRuleService.getRuleMap();
         List<HostMetricsVO> voList = new ArrayList<>();
-        // 给lambda使用的map
-        @lombok.Data
-        @AllArgsConstructor
-        class Data {
-            String name;
-            String type;
-            String desc;
-            HostMetricsBO.Type fieldType;
-        }
-        // TODO 待优化
-        List<Data> dataList = new ArrayList<>();
-        dataList.add(new Data("host.mem.sum", "mem", "主机内存使用量(MB)", HostMetricsBO.Type.MEM));
-        dataList.add(new Data("host.network.bytin", "bytin", "主机网络流量IN(MB/s)", HostMetricsBO.Type.BYTIN));
-        dataList.add(new Data("host.load.avg", "load", "主机负载(1min)", HostMetricsBO.Type.LOAD));
-        dataList.add(new Data("host.cpu.rate", "cpu", "主机CPU使用率(%)", HostMetricsBO.Type.CPU));
-        dataList.add(new Data("host.disk.rate", "disk", "主机磁盘使用率(/data，%)", HostMetricsBO.Type.DISK));
-        dataList.add(new Data("host.network.tcp", "tcp", "主机TCP连接数", HostMetricsBO.Type.TCP));
-        dataList.add(new Data("host.mem.rate", "mem_rate", "主机内存使用率(%)", HostMetricsBO.Type.MEM_RATE));
-        dataList.add(new Data("host.disk.io.rate", "io", "主机磁盘IO使用率(/data，%)", HostMetricsBO.Type.MEM_RATE));
-        dataList.add(new Data("host.disk.inode.rate", "inode", "主机磁盘INODE使用率(/data，%)", HostMetricsBO.Type.INODE));
-        dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetricsBO.Type.BYOUT));
-        map.forEach((time, info) -> dataList.forEach(data -> voList.add(
-                createHostMetricsVO(data.desc, data.name,
-                        data.type, info.getValueByType(data.fieldType), info.getUpdateTime(),
-                        alertRuleService.getRuleValue(alertMap.get(data.name), AlertRule::getWarningValue),
-                        alertRuleService.getRuleValue(alertMap.get(data.name), AlertRule::getErrorValue)))));
+        List<HostMetricsBO.FiledType> filedTypeList = Arrays.stream(HostMetricsBO.FiledType.values()).collect(Collectors.toList());
+        map.forEach((time, info) -> filedTypeList.forEach(fieldType -> voList.add(
+                createHostMetricsVO(fieldType, info.getValueByType(fieldType), info.getUpdateTime(),
+                        alertRuleService.getRuleValue(alertMap.get(fieldType.getName()), AlertRule::getWarningValue),
+                        alertRuleService.getRuleValue(alertMap.get(fieldType.getName()), AlertRule::getErrorValue)))));
 
         return voList;
     }
 
-    private HostMetricsVO createHostMetricsVO(String desc, String name,
-                                              String type, BigDecimal value,
+    private HostMetricsVO createHostMetricsVO(HostMetricsBO.FiledType fieldType, BigDecimal value,
                                               LocalDateTime monitorTime,
                                               BigDecimal warnLimit, BigDecimal errorLimit) {
         HostMetricsVO vo = new HostMetricsVO();
-        vo.setDesc(desc);
-        vo.setName(name);
-        vo.setType(type);
+        vo.setDesc(fieldType.getDesc());
+        vo.setName(fieldType.getName());
+        vo.setType(fieldType.getType());
         vo.setValue(value);
         vo.setMonitorTime(monitorTime);
         // 即该项指标有预警规则

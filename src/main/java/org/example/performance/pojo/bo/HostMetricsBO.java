@@ -6,10 +6,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.HasUpdateTime;
-import org.example.performance.component.exception.BusinessException;
-import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.pojo.po.DiskInfo;
 
 import java.io.Serializable;
@@ -24,9 +23,28 @@ import java.util.List;
 @Slf4j
 public class HostMetricsBO implements Serializable, HasUpdateTime {
 
-    public enum Type {
-        MEM, BYTIN, LOAD, CPU, DISK, TCP, MEM_RATE, IO, INODE, BYOUT
+    @Getter
+    public enum FiledType {
+        MEM("host.mem.sum", "主机内存使用量(MB)", "mem"),
+        BYTIN("host.network.bytin", "", "bytin"),
+        LOAD("host.load.avg", "主机负载(1min)", "load"),
+        CPU("host.cpu.rate", "主机CPU使用率(%)", "cpu"),
+        DISK("host.disk.rate", "主机磁盘使用率(/data，%)", "disk"),
+        TCP("host.network.tcp", "主机TCP连接数", "tcp"),
+        MEM_RATE("host.mem.rate", "主机内存使用率(%)", "mem_rate"),
+        IO("host.disk.io.rate", "主机磁盘IO使用率(/data，%)", "io"),
+        INODE("host.disk.inode.rate", "主机磁盘INODE使用率(/data，%)", "inode"),
+        BYOUT("host.network.bytout", "主机网络流量OUT(MB/s)", "bytout");
 
+        private final String name;
+        private final String desc;
+        private final String type;
+
+        FiledType(String name, String desc, String type) {
+            this.name = name;
+            this.desc = desc;
+            this.type = type;
+        }
     }
 
     /**
@@ -112,33 +130,33 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
     /**
      * 传入一个字段type枚举来动态获得字段值
      *
-     * @param type 字段枚举
+     * @param filedType 字段枚举
      * @return 返回字段对应的值
      */
-    public BigDecimal getValueByType(Type type) {
-        if (Type.MEM.equals(type)) {
+    public BigDecimal getValueByType(FiledType filedType) {
+        if (FiledType.MEM.equals(filedType)) {
             return mem;
-        } else if (Type.BYTIN.equals(type)) {
+        } else if (FiledType.BYTIN.equals(filedType)) {
             return byteIn;
-        } else if (Type.LOAD.equals(type)) {
+        } else if (FiledType.LOAD.equals(filedType)) {
             return hostLoad;
-        } else if (Type.CPU.equals(type)) {
+        } else if (FiledType.CPU.equals(filedType)) {
             return cpu;
-        } else if (Type.DISK.equals(type)) {
+        } else if (FiledType.DISK.equals(filedType)) {
             return disk;
-        } else if (Type.TCP.equals(type)) {
+        } else if (FiledType.TCP.equals(filedType)) {
             return tcp;
-        } else if (Type.MEM_RATE.equals(type)) {
+        } else if (FiledType.MEM_RATE.equals(filedType)) {
             return memRate;
-        } else if (Type.IO.equals(type)) {
+        } else if (FiledType.IO.equals(filedType)) {
             return io;
-        } else if (Type.INODE.equals(type)) {
+        } else if (FiledType.INODE.equals(filedType)) {
             return inode;
-        } else if (Type.BYOUT.equals(type)) {
+        } else if (FiledType.BYOUT.equals(filedType)) {
             return byteOut;
         } else {
-            log.error("不支持的字段类型{}", type);
-            throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+            log.error("不支持的字段类型{}", filedType);
+            return null;
         }
     }
 
@@ -151,30 +169,29 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
      * @return 返回字段对应的值
      */
     public BigDecimal getValueByType(String type) {
-        switch (type) {
-            case "host.mem.sum":
-                return mem;
-            case "host.network.bytin":
-                return byteIn;
-            case "host.load.avg":
-                return hostLoad;
-            case "host.cpu.rate":
-                return cpu;
-            case "host.disk.rate":
-                return disk;
-            case "host.network.tcp":
-                return tcp;
-            case "host.mem.rate":
-                return memRate;
-            case "host.disk.io.rate":
-                return io;
-            case "host.disk.inode.rate":
-                return inode;
-            case "host.network.bytout":
-                return byteOut;
-            default:
-                log.error("不支持的字段类型{}", type);
-                return null;
+        if (FiledType.MEM.getName().equals(type)) {
+            return mem;
+        } else if (FiledType.BYTIN.getName().equals(type)) {
+            return byteIn;
+        } else if (FiledType.LOAD.getName().equals(type)) {
+            return hostLoad;
+        } else if (FiledType.CPU.getName().equals(type)) {
+            return cpu;
+        } else if (FiledType.DISK.getName().equals(type)) {
+            return disk;
+        } else if (FiledType.TCP.getName().equals(type)) {
+            return tcp;
+        } else if (FiledType.MEM_RATE.getName().equals(type)) {
+            return memRate;
+        } else if (FiledType.IO.getName().equals(type)) {
+            return io;
+        } else if (FiledType.INODE.getName().equals(type)) {
+            return inode;
+        } else if (FiledType.BYOUT.getName().equals(type)) {
+            return byteOut;
+        } else {
+            log.error("不支持的字段类型{}", type);
+            return null;
         }
     }
 
@@ -182,42 +199,30 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
      * 传入一个字段type来动态获得字段值
      *
      * @param type 字段类型
-     * @return 返回字段对应的值
      */
     public void setValue(String type, BigDecimal value) {
-        switch (type) {
-            case "host.mem.sum":
-                mem = value;
-                break;
-            case "host.network.bytin":
-                byteIn = value;
-                break;
-            case "host.load.avg":
-                hostLoad = value;
-                break;
-            case "host.cpu.rate":
-                cpu = value;
-                break;
-            case "host.disk.rate":
-                disk = value;
-                break;
-            case "host.network.tcp":
-                tcp = value;
-                break;
-            case "host.mem.rate":
-                memRate = value;
-                break;
-            case "host.disk.io.rate":
-                io = value;
-                break;
-            case "host.disk.inode.rate":
-                inode = value;
-                break;
-            case "host.network.bytout":
-                byteOut = value;
-                break;
-            default:
-                log.error("不支持的字段类型{}", type);
+        if (FiledType.MEM.getName().equals(type)) {
+            mem = value;
+        } else if (FiledType.BYTIN.getName().equals(type)) {
+            byteIn = value;
+        } else if (FiledType.LOAD.getName().equals(type)) {
+            hostLoad = value;
+        } else if (FiledType.CPU.getName().equals(type)) {
+            cpu = value;
+        } else if (FiledType.DISK.getName().equals(type)) {
+            disk = value;
+        } else if (FiledType.TCP.getName().equals(type)) {
+            tcp = value;
+        } else if (FiledType.MEM_RATE.getName().equals(type)) {
+            memRate = value;
+        } else if (FiledType.IO.getName().equals(type)) {
+            io = value;
+        } else if (FiledType.INODE.getName().equals(type)) {
+            inode = value;
+        } else if (FiledType.BYOUT.getName().equals(type)) {
+            byteOut = value;
+        } else {
+            log.error("不支持的字段类型{}", type);
         }
     }
 }
