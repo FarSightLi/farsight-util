@@ -11,17 +11,17 @@ import java.time.LocalDateTime;
  * @author lilongsheng
  * @version 1.0
  * @project performance
- * @description 查询容器或主机的参数对象
- * @date 2023/12/11 16:27:43
+ * @description 查询容器的参数DTO
+ * @date 2023/12/21 15:59:33
  */
 @Data
-public class InfoDTO {
+public class ContainerInfoDTO {
     /**
      * ip
      */
     @NotNull
     @NotBlank
-    private String ip;
+    private Long id;
 
     /**
      * 开始时间

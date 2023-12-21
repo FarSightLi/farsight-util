@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public Result handleMyCustomException(BusinessException ex) {
-        log.info("全局异常处理生效" + ex.getMessage());
+        log.error(ex.getMessage());
         return Result.error(ex);
     }
 }

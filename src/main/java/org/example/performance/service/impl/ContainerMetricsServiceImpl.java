@@ -49,6 +49,61 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
         List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
         List<ContainerMetricsBO> metricsList = (List<ContainerMetricsBO>) infoAndMetricsList.get(1);
+        return mergeContainerInfo(containerInfoList, metricsList, startTime, endTime);
+    }
+
+    @Override
+    public ContainerInfoVO getContainerMetricsById(Long id, LocalDateTime startTime, LocalDateTime endTime) {
+        ContainerInfo containerInfo = containerInfoService.getById(id);
+        if (ObjectUtil.isEmpty(containerInfo)) {
+            throw new BusinessException(CodeMsg.PARAMETER_ERROR, id + "没找到容器信息");
+        }
+        List<ContainerMetricsBO> metricsList = metricRecordService.getContainerMetricBOList(Collections.singletonList(id), startTime, endTime);
+        if (ObjectUtil.isEmpty(metricsList)) {
+            throw new BusinessException(CodeMsg.PARAMETER_ERROR, id + "没找到指标记录信息");
+        }
+        return mergeContainerInfo(Collections.singletonList(containerInfo), metricsList, startTime, endTime).get(0);
+    }
+
+    @Override
+    public List<ContainerTrendVO> getMetricTrend(String ip, LocalDateTime startTime, LocalDateTime endTime) {
+        List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
+        List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
+        List<ContainerMetricsBO> metricsList = (List<ContainerMetricsBO>) infoAndMetricsList.get(1);
+        if (ObjectUtil.isEmpty(metricsList) || ObjectUtil.isEmpty(containerInfoList)) {
+            return Collections.emptyList();
+        }
+        return mergeContainerTrend(containerInfoList, metricsList);
+    }
+
+    @Override
+    public List<ContainerTrendVO> getMetricTrendById(Long id, LocalDateTime startTime, LocalDateTime endTime) {
+        ContainerInfo containerInfo = containerInfoService.getById(id);
+        List<ContainerMetricsBO> metricsList = metricRecordService.getContainerMetricBOList(Collections.singletonList(id), startTime, endTime);
+        if (ObjectUtil.isEmpty(metricsList) || ObjectUtil.isEmpty(containerInfo)) {
+            return Collections.emptyList();
+        }
+        return mergeContainerTrend(Collections.singletonList(containerInfo), metricsList);
+    }
+
+    private List<ContainerTrendVO> mergeContainerTrend(List<ContainerInfo> containerInfoList, List<ContainerMetricsBO> metricsList) {
+        // 容器code对应的容器信息
+        Map<Long, ContainerInfo> infoMap = containerInfoList.stream().collect(Collectors.toMap(ContainerInfo::getId, Function.identity()));
+        // 容器code对应的指标数据
+        Map<Long, List<ContainerMetricsBO>> metricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getCode));
+        List<ContainerTrendVO> voList = new ArrayList<>();
+        Map<String, AlertRule> ruleMap = alertRuleService.getRuleMap();
+        infoMap.forEach((id, info) -> {
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.MEM, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.DISK, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.CPU, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.MEM_RATE, ruleMap, info, metricsMap.get(id)));
+        });
+        return voList;
+    }
+
+    private List<ContainerInfoVO> mergeContainerInfo(List<ContainerInfo> containerInfoList, List<ContainerMetricsBO> metricsList,
+                                                     LocalDateTime startTime, LocalDateTime endTime) {
         // 获得容器CPU为零的主机ip
         Set<String> hostIpList = containerInfoList.stream().filter(containerInfo -> containerInfo.getCpus().compareTo(BigDecimal.ZERO) == 0).map(ContainerInfo::getHostIp).collect(Collectors.toSet());
         // 主机id对应cpu数的map
@@ -88,31 +143,8 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
                 calculateState(vo);
                 voList.add(vo);
             } else {
-                log.warn("在{}到{}内主机{}没有{}的性能信息", startTime, endTime, ip, containerInfo.getContainerName());
+                log.warn("在{}到{}内主机{}没有{}的性能信息", startTime, endTime, containerInfo.getHostIp(), containerInfo.getContainerName());
             }
-        });
-        return voList;
-    }
-
-    @Override
-    public List<ContainerTrendVO> getMetricTrend(String ip, LocalDateTime startTime, LocalDateTime endTime) {
-        List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
-        List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
-        List<ContainerMetricsBO> metricsList = (List<ContainerMetricsBO>) infoAndMetricsList.get(1);
-        if (ObjectUtil.isEmpty(metricsList) || ObjectUtil.isEmpty(containerInfoList)) {
-            return Collections.emptyList();
-        }
-        // 容器code对应的容器信息
-        Map<Long, ContainerInfo> infoMap = containerInfoList.stream().collect(Collectors.toMap(ContainerInfo::getId, Function.identity()));
-        // 容器code对应的指标数据
-        Map<Long, List<ContainerMetricsBO>> metricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getCode));
-        List<ContainerTrendVO> voList = new ArrayList<>();
-        Map<String, AlertRule> ruleMap = alertRuleService.getRuleMap();
-        infoMap.forEach((id, info) -> {
-            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.MEM, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.DISK, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.CPU, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.MEM_RATE, ruleMap, info, metricsMap.get(id)));
         });
         return voList;
     }

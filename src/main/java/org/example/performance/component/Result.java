@@ -67,7 +67,7 @@ public class Result<T> implements Serializable {
 
     @SuppressWarnings("rawtypes")
     public static Result error(BusinessException e) {
-        return error(e.getCodeMsg(), e.getMessage());
+        return error(e.getCodeMsg(), e.getCodeMsg().getCodeRemark());
     }
 
     @SuppressWarnings({"rawtypes"})
@@ -77,7 +77,7 @@ public class Result<T> implements Serializable {
 
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static Result error(CodeMsg codeMsg, String message) {
-        return new Result(codeMsg, message, null);
+        return new Result(codeMsg.getCode(), codeMsg.getCodeRemark(), null);
     }
 
     @SuppressWarnings({"unchecked", "rawtypes"})

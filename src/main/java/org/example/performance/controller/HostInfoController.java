@@ -2,9 +2,11 @@ package org.example.performance.controller;
 
 import org.example.performance.component.Result;
 import org.example.performance.component.exception.CodeMsg;
-import org.example.performance.pojo.dto.InfoDTO;
+import org.example.performance.pojo.dto.IpInfoDTO;
 import org.example.performance.pojo.vo.HostInfoVO;
 import org.example.performance.pojo.vo.HostMetricsVO;
+import org.example.performance.pojo.vo.SimpleContainerVO;
+import org.example.performance.service.ContainerInfoService;
 import org.example.performance.service.HostInfoService;
 import org.example.performance.service.HostMetricsService;
 import org.example.performance.util.ServiceUtil;
@@ -28,6 +30,8 @@ public class HostInfoController {
     private HostInfoService hostInfoService;
     @Resource
     private HostMetricsService hostMetricsService;
+    @Resource
+    private ContainerInfoService containerInfoService;
 
     @GetMapping("/info/{ip}")
     public Result<HostInfoVO> getHostInfo(@PathVariable String ip) {
@@ -41,7 +45,7 @@ public class HostInfoController {
      * @return
      */
     @PostMapping("/metric")
-    public Result<List<HostMetricsVO>> getMetric(@RequestBody InfoDTO infoDTO) {
+    public Result<List<HostMetricsVO>> getMetric(@RequestBody IpInfoDTO infoDTO) {
         LocalDateTime startTime = infoDTO.getStartTime();
         LocalDateTime endTime = infoDTO.getEndTime();
         if (ServiceUtil.validTime(startTime, endTime)) {
@@ -49,6 +53,17 @@ public class HostInfoController {
         } else {
             return Result.success(hostMetricsService.getMetricsVO(infoDTO.getIp(), startTime, endTime));
         }
+    }
+
+    /**
+     * 通过ip查看本主机所运行的所有容器的唯一id
+     *
+     * @param ip
+     * @return
+     */
+    @GetMapping("/containerList/{ip}")
+    public Result<List<SimpleContainerVO>> getContainerList(@PathVariable String ip) {
+        return Result.success(containerInfoService.getContainerList(ip));
     }
 
 }

@@ -15,5 +15,9 @@ public interface ContainerMetricsService {
 
     List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime);
 
+    ContainerInfoVO getContainerMetricsById(Long id, LocalDateTime startTime, LocalDateTime endTime);
+
     List<ContainerTrendVO> getMetricTrend(String ip, LocalDateTime startTime, LocalDateTime endTime);
+
+    List<ContainerTrendVO> getMetricTrendById(Long id, LocalDateTime startTime, LocalDateTime endTime);
 }

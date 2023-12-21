@@ -2,6 +2,7 @@ package org.example.performance.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import org.example.performance.pojo.po.ContainerInfo;
+import org.example.performance.pojo.vo.SimpleContainerVO;
 
 import java.util.List;
 import java.util.Map;
@@ -39,4 +40,6 @@ public interface ContainerInfoService extends IService<ContainerInfo> {
      * @return
      */
     Long getCodeByContainerId(String containerId);
+
+    List<SimpleContainerVO> getContainerList(String ip);
 }

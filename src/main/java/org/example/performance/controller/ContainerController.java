@@ -2,7 +2,8 @@ package org.example.performance.controller;
 
 import org.example.performance.component.Result;
 import org.example.performance.component.exception.CodeMsg;
-import org.example.performance.pojo.dto.InfoDTO;
+import org.example.performance.pojo.dto.ContainerInfoDTO;
+import org.example.performance.pojo.dto.IpInfoDTO;
 import org.example.performance.pojo.vo.ContainerInfoVO;
 import org.example.performance.pojo.vo.ContainerTrendVO;
 import org.example.performance.service.ContainerMetricsService;
@@ -35,7 +36,7 @@ public class ContainerController {
      * @param dto
      */
     @PostMapping("/metric")
-    public Result<List<ContainerInfoVO>> getMetric(@RequestBody InfoDTO dto) {
+    public Result<List<ContainerInfoVO>> getMetric(@RequestBody IpInfoDTO dto) {
         LocalDateTime startTime = dto.getStartTime();
         LocalDateTime endTime = dto.getEndTime();
         if (ServiceUtil.validTime(startTime, endTime)) {
@@ -53,13 +54,47 @@ public class ContainerController {
      * @return
      */
     @PostMapping("/metricTrend")
-    public Result<List<ContainerTrendVO>> metricTrend(@RequestBody InfoDTO dto) {
+    public Result<List<ContainerTrendVO>> metricTrend(@RequestBody IpInfoDTO dto) {
         LocalDateTime startTime = dto.getStartTime();
         LocalDateTime endTime = dto.getEndTime();
         if (ServiceUtil.validTime(startTime, endTime)) {
             return Result.error(CodeMsg.PARAMETER_ERROR, "时间间隔不正确");
         } else {
             return Result.success(containerMetricsService.getMetricTrend(dto.getIp(), startTime, endTime));
+        }
+    }
+
+
+    /**
+     * 查看某个时段指定容器的容器信息
+     *
+     * @param dto
+     */
+    @PostMapping("/metricById")
+    public Result<ContainerInfoVO> getMetricById(@RequestBody ContainerInfoDTO dto) {
+        LocalDateTime startTime = dto.getStartTime();
+        LocalDateTime endTime = dto.getEndTime();
+        if (ServiceUtil.validTime(startTime, endTime)) {
+            return Result.error(CodeMsg.PARAMETER_ERROR, "时间间隔不正确");
+        } else {
+            return Result.success(containerMetricsService.getContainerMetricsById(dto.getId(), startTime, endTime));
+        }
+    }
+
+    /**
+     * 获得容器的图表信息
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/metricTrendById")
+    public Result<List<ContainerTrendVO>> metricTrendById(@RequestBody ContainerInfoDTO dto) {
+        LocalDateTime startTime = dto.getStartTime();
+        LocalDateTime endTime = dto.getEndTime();
+        if (ServiceUtil.validTime(startTime, endTime)) {
+            return Result.error(CodeMsg.PARAMETER_ERROR, "时间间隔不正确");
+        } else {
+            return Result.success(containerMetricsService.getMetricTrendById(dto.getId(), startTime, endTime));
         }
     }
 }

@@ -9,6 +9,7 @@ import org.example.performance.component.exception.BusinessException;
 import org.example.performance.component.exception.CodeMsg;
 import org.example.performance.mapper.ContainerInfoMapper;
 import org.example.performance.pojo.po.ContainerInfo;
+import org.example.performance.pojo.vo.SimpleContainerVO;
 import org.example.performance.service.ContainerInfoService;
 import org.example.performance.service.HostInfoService;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -81,6 +82,18 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
                         return new BusinessException(CodeMsg.SYSTEM_ERROR);
                     });
         }
+    }
+
+    @Override
+    public List<SimpleContainerVO> getContainerList(String ip) {
+        List<ContainerInfo> infoList = lambdaQuery().eq(ContainerInfo::getHostIp, ip).select(ContainerInfo::getId, ContainerInfo::getContainerName, ContainerInfo::getVersion).list();
+        return infoList.stream().map(info -> {
+            SimpleContainerVO simpleContainerVO = new SimpleContainerVO();
+            simpleContainerVO.setCode(info.getId());
+            simpleContainerVO.setVersion(info.getVersion());
+            simpleContainerVO.setName(info.getContainerName());
+            return simpleContainerVO;
+        }).collect(Collectors.toList());
     }
 
     /**
