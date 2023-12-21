@@ -15,10 +15,10 @@ public interface MetricConfigService extends IService<MetricConfig> {
     /**
      * 获得某种类型的配置名对应的配置id
      *
-     * @param origin
+     * @param type
      * @return
      */
-    Map<String, Integer> getMetricType2IdMapByType(MetricConfig.Origin origin);
+    Map<String, Integer> getMetricName2IdMapByType(MetricConfig.Type type);
 
-    List<MetricConfig> getMetricConfigList(MetricConfig.Origin origin);
+    List<MetricConfig> getMetricConfigList(MetricConfig.Type type);
 }

@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
 import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
 import lombok.Data;
+import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 import org.example.performance.component.HasUpdateTime;
 import org.example.performance.component.exception.BusinessException;
@@ -40,11 +41,22 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
     }
 
 
-    public enum Type {
-        CPU,
-        MEM,
-        MEM_RATE,
-        DISK
+    @Getter
+    public enum MetricType {
+        CPU("container.cpu.rate", "cpu", "容器CPU使用率(相对于limit，%)"),
+        MEM("container.mem.sum", "mem", "容器内存使用量(MB)"),
+        MEM_RATE("container.mem.rate", "mem_rate", "容器内存使用率(相对于limit，%)"),
+        DISK("container.disk.sum", "disk", "容器磁盘使用量(MB)");
+
+        private final String ruleKey;
+        private final String name;
+        private final String desc;
+
+        MetricType(String ruleKey, String name, String desc) {
+            this.ruleKey = ruleKey;
+            this.name = name;
+            this.desc = desc;
+        }
     }
 
     /**
@@ -107,15 +119,15 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
      * @param memSize
      * @return
      */
-    public BigDecimal getValue(Type field, BigDecimal memSize) {
+    public BigDecimal getValue(MetricType field, BigDecimal memSize) {
         BigDecimal result;
-        if (Type.MEM.equals(field)) {
+        if (MetricType.MEM.equals(field)) {
             result = this.memUsedSize;
-        } else if (Type.CPU.equals(field)) {
+        } else if (MetricType.CPU.equals(field)) {
             result = this.cpuRate;
-        } else if (Type.DISK.equals(field)) {
+        } else if (MetricType.DISK.equals(field)) {
             result = this.diskUsedSize;
-        } else if (Type.MEM_RATE.equals(field)) {
+        } else if (MetricType.MEM_RATE.equals(field)) {
             if (memUsedSize == null || memSize == null || memSize.compareTo(BigDecimal.ZERO) == 0) {
                 return null;
             }
@@ -137,11 +149,11 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
      */
     public BigDecimal getValueByStr(String field) {
         switch (field) {
-            case "mem":
+            case "container.mem.sum":
                 return this.memUsedSize;
-            case "cpu":
+            case "container.cpu.rate":
                 return this.cpuRate;
-            case "disk":
+            case "container.disk.sum":
                 return this.diskUsedSize;
             default:
                 log.warn("不支持的字段：{}", field);
@@ -157,18 +169,17 @@ public class ContainerMetricsBO implements Serializable, HasUpdateTime {
      */
     public void setValue(String field, BigDecimal value) {
         switch (field) {
-            case "mem":
+            case "container.mem.sum":
                 this.memUsedSize = value;
                 break;
-            case "cpu":
+            case "container.cpu.rate":
                 this.cpuRate = value;
                 break;
-            case "disk":
+            case "container.disk.sum":
                 this.diskUsedSize = value;
                 break;
             default:
-                log.error("不支持的字段：{}", field);
-                throw new BusinessException(CodeMsg.PARAMETER_ERROR);
+                log.warn("不支持的字段：{}", field);
         }
 
     }

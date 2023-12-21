@@ -43,20 +43,19 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
     private AlertRuleService alertRuleService;
     @Resource
     private MetricRecordService metricRecordService;
+
     @Override
     public List<ContainerInfoVO> getContainerMetricsByIp(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<Object> infoAndMetricsList = getInfoAndMetricsList(ip, startTime, endTime);
         List<ContainerInfo> containerInfoList = (List<ContainerInfo>) infoAndMetricsList.get(0);
         List<ContainerMetricsBO> metricsList = (List<ContainerMetricsBO>) infoAndMetricsList.get(1);
-        // 获得容器CPU为零的主机id
-        Set<Long> hostIdList = containerInfoList.stream().filter(containerInfo -> containerInfo.getCpus().compareTo(BigDecimal.ZERO) == 0).map(ContainerInfo::getHostId).collect(Collectors.toSet());
+        // 获得容器CPU为零的主机ip
+        Set<String> hostIpList = containerInfoList.stream().filter(containerInfo -> containerInfo.getCpus().compareTo(BigDecimal.ZERO) == 0).map(ContainerInfo::getHostIp).collect(Collectors.toSet());
         // 主机id对应cpu数的map
-        Map<Long, Integer> hostCpuMap = new HashMap<>();
-        if (ObjectUtil.isNotEmpty(hostIdList)) {
-            List<HostInfo> hostInfoList = hostInfoService.lambdaQuery().in(HostInfo::getId, hostIdList).select(HostInfo::getCpuCores, HostInfo::getId).list();
-            if (ObjectUtil.isNotEmpty(hostInfoList)) {
-                hostCpuMap = hostInfoList.stream().collect(Collectors.toMap(HostInfo::getId, HostInfo::getCpuCores));
-            }
+        Map<String, Integer> hostCpuMap = new HashMap<>();
+        if (ObjectUtil.isNotEmpty(hostIpList)) {
+            List<HostInfo> hostInfoList = hostInfoService.lambdaQuery().in(HostInfo::getIp, hostIpList).select(HostInfo::getCpuCores, HostInfo::getIp).list();
+            hostCpuMap = hostInfoList.stream().collect(Collectors.toMap(HostInfo::getIp, HostInfo::getCpuCores));
         }
 
         if (ObjectUtil.isEmpty(metricsList)) {
@@ -66,7 +65,7 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         Map<Long, List<ContainerMetricsBO>> containerMetricsMap = metricsList.stream().collect(Collectors.groupingBy(ContainerMetricsBO::getCode));
         List<ContainerInfoVO> voList = new ArrayList<>();
         // 提供给Lambda使用
-        Map<Long, Integer> finalHostCpuMap = hostCpuMap;
+        Map<String, Integer> finalHostCpuMap = hostCpuMap;
         containerInfoList.forEach(containerInfo -> {
             ContainerInfoVO vo = new ContainerInfoVO();
             // 所有历史数据
@@ -110,55 +109,38 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         List<ContainerTrendVO> voList = new ArrayList<>();
         Map<String, AlertRule> ruleMap = alertRuleService.getRuleMap();
         infoMap.forEach((id, info) -> {
-            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.MEM, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.DISK, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.CPU, ruleMap, info, metricsMap.get(id)));
-            voList.add(getContainerTrendVO(ContainerMetricsBO.Type.MEM_RATE, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.MEM, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.DISK, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.CPU, ruleMap, info, metricsMap.get(id)));
+            voList.add(getContainerTrendVO(ContainerMetricsBO.MetricType.MEM_RATE, ruleMap, info, metricsMap.get(id)));
         });
         return voList;
     }
 
-    private ContainerTrendVO getContainerTrendVO(ContainerMetricsBO.Type type,
+    private ContainerTrendVO getContainerTrendVO(ContainerMetricsBO.MetricType metricType,
                                                  Map<String, AlertRule> ruleMap,
                                                  ContainerInfo info,
                                                  List<ContainerMetricsBO> metricsList) {
-        String desc = "";
-        String name = "";
-        String ruleKey = "";
-        if (type.equals(ContainerMetricsBO.Type.CPU)) {
-            desc = "容器CPU使用率(相对于limit，%)";
-            name = "cpu";
-            ruleKey = "container.cpu.rate";
-        } else if (type.equals(ContainerMetricsBO.Type.MEM)) {
-            desc = "容器内存使用量(MB)";
-            name = "mem";
-            ruleKey = "container.mem.sum";
-        } else if (type.equals(ContainerMetricsBO.Type.DISK)) {
-            desc = "容器磁盘使用量(MB)";
-            name = "disk";
-            ruleKey = "container.disk.sum";
-        } else {
-            desc = "容器内存使用率(相对于limit，%)";
-            name = "mem_rate";
-            ruleKey = "container.mem.rate";
-        }
+        String desc = metricType.getDesc();
+        String name = metricType.getName();
+        String ruleKey = metricType.getRuleKey();
 
         ContainerTrendVO vo = new ContainerTrendVO();
         vo.setMetricDesc(desc);
         vo.setMetricName(name);
-        vo.setTriggerWarnLimit(ruleMap.getOrDefault(ruleKey, new AlertRule()).getWarningValue());
-        vo.setTriggerErrorLimit(ruleMap.getOrDefault(ruleKey, new AlertRule()).getErrorValue());
+        vo.setTriggerWarnLimit(alertRuleService.getRuleValue(ruleMap.get(ruleKey), AlertRule::getWarningValue));
+        vo.setTriggerErrorLimit(alertRuleService.getRuleValue(ruleMap.get(ruleKey), AlertRule::getErrorValue));
 
         List<ContainerTrendVO.MetricDataEntry> metricDataEntryList = new ArrayList<>();
         ContainerTrendVO.MetricDataEntry metricDataEntry = new ContainerTrendVO.MetricDataEntry();
         metricDataEntry.setTarget(info.getContainerName());
-        metricDataEntry.setMetrics(getMetricValueList(metricsList, type, info.getMemSize()));
+        metricDataEntry.setMetrics(getMetricValueList(metricsList, metricType, info.getMemSize()));
         metricDataEntryList.add(metricDataEntry);
         vo.setList(metricDataEntryList);
         return vo;
     }
 
-    private void getThreeMaxIndex(List<ContainerMetricsBO> containerMetricsBOList, ContainerInfoVO vo, ContainerInfo containerInfo, Map<Long, Integer> hostCpuMap) {
+    private void getThreeMaxIndex(List<ContainerMetricsBO> containerMetricsBOList, ContainerInfoVO vo, ContainerInfo containerInfo, Map<String, Integer> hostCpuMap) {
         BigDecimal maxCpuRate = containerMetricsBOList.stream()
                 .filter(containerMetrics -> containerMetrics.getCpuRate() != null)
                 .max(Comparator.comparing(ContainerMetricsBO::getCpuRate))
@@ -166,9 +148,9 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         BigDecimal cpus = containerInfo.getCpus();
         // 代表没有限制,容器cpu即是主机cpu数
         if (cpus.compareTo(BigDecimal.ZERO) == 0) {
-            Integer hostCpuCores = hostCpuMap.getOrDefault(containerInfo.getHostId(), null);
+            Integer hostCpuCores = hostCpuMap.getOrDefault(containerInfo.getHostIp(), null);
             if (hostCpuCores == null) {
-                log.error("没有获得容器的主机CPU信息，容器name：{}，主机id：{}", containerInfo.getContainerName(), containerInfo.getHostId());
+                log.error("没有获得容器的主机CPU信息，容器name：{}，主机id：{}", containerInfo.getContainerName(), containerInfo.getHostIp());
                 throw new BusinessException(CodeMsg.SYSTEM_ERROR);
             }
             cpus = BigDecimal.valueOf(hostCpuCores);
@@ -253,10 +235,10 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
         AlertRule rule = ruleMap.getOrDefault(ruleType, new AlertRule());
 
         // 设置最大Rate状态
-        vo.setMaxState(metricType, getRateState(maxRate, rule.getErrorValue(), rule.getWarningValue()));
+        vo.setMaxState(metricType, getRateState(maxRate, BigDecimal.valueOf(rule.getErrorValue()), BigDecimal.valueOf(rule.getWarningValue())));
 
         // 设置平均Rate状态
-        vo.setAvgState(metricType, getRateState(avgRate, rule.getErrorValue(), rule.getWarningValue()));
+        vo.setAvgState(metricType, getRateState(avgRate, BigDecimal.valueOf(rule.getErrorValue()), BigDecimal.valueOf(rule.getWarningValue())));
     }
 
     private Integer getRateState(BigDecimal rate, BigDecimal errorValue, BigDecimal warningValue) {
@@ -310,14 +292,14 @@ public class ContainerMetricsServiceImpl implements ContainerMetricsService {
 
 
     private ContainerTrendVO.MetricValue getMetricValueList(List<ContainerMetricsBO> metricsList,
-                                                            ContainerMetricsBO.Type type, BigDecimal memSize) {
+                                                            ContainerMetricsBO.MetricType metricType, BigDecimal memSize) {
         ContainerTrendVO.MetricValue metricValue = new ContainerTrendVO.MetricValue();
         List<Object> list = new ArrayList<>();
         metricsList.forEach(e -> {
             list.add(e.getUpdateTime().toInstant(ZoneOffset.ofHours(8)).toEpochMilli());
-            BigDecimal value = e.getValue(type, memSize);
+            BigDecimal value = e.getValue(metricType, memSize);
             if (value == null) {
-                log.warn("容器性能记录{}为null，容器id为{}", type, e.getCode());
+                log.warn("容器性能记录{}为null，容器id为{}", metricType, e.getCode());
             } else {
                 list.add(value);
             }

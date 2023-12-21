@@ -7,7 +7,6 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.math.BigDecimal;
 
 /**
  * 预警规则表
@@ -25,17 +24,17 @@ public class AlertRule implements Serializable {
     /**
      * 严重阈值
      */
-    private BigDecimal errorValue;
+    private Integer errorValue;
 
     /**
      * 警告阈值
      */
-    private BigDecimal warningValue;
+    private Integer warningValue;
 
     /**
      * 对应配置表中的指标id
      */
-    private Integer configId;
+    private Integer metricId;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

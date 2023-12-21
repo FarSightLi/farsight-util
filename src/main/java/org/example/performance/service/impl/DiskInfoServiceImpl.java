@@ -5,14 +5,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.example.performance.mapper.DiskInfoMapper;
 import org.example.performance.pojo.po.DiskInfo;
 import org.example.performance.service.DiskInfoService;
-import org.example.performance.service.HostInfoService;
 import org.springframework.stereotype.Service;
 
-import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -24,19 +20,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class DiskInfoServiceImpl extends ServiceImpl<DiskInfoMapper, DiskInfo>
         implements DiskInfoService {
-    @Resource
-    private HostInfoService hostInfoService;
-
     @Override
     public void saveDiskInfo(List<DiskInfo> diskInfoList) {
-        // ip对应磁盘信息的map
-        Map<String, List<DiskInfo>> diskInfoMap = diskInfoList.stream().collect(Collectors.groupingBy(DiskInfo::getHostIp));
-        Set<String> ipSet = diskInfoMap.keySet();
-        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipSet);
         // 这样能保证一组数据的更新时间一定是相同的
         LocalDateTime now = LocalDateTime.now();
         List<DiskInfo> saveDiskList = diskInfoList.stream().map(diskInfo -> {
-            diskInfo.setHostId(ip2IdMap.get(diskInfo.getHostIp()));
             diskInfo.setUpdateTime(now);
             return diskInfo;
         }).collect(Collectors.toList());

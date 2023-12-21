@@ -17,7 +17,13 @@ import java.util.List;
 public interface DiskInfoMapper extends BaseMapper<DiskInfo> {
     int insertBatch(@Param("diskInfoList") List<DiskInfo> diskInfoList);
 
-    List<DiskInfo> selectNewestByHostId(@Param("hostId") Long hostId);
+    /**
+     * 通过ip查找最新的磁盘信息
+     *
+     * @param hostIp
+     * @return
+     */
+    List<DiskInfo> selectNewestByHostIp(@Param("hostIp") String hostIp);
 }
 
 

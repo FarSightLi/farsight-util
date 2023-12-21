@@ -9,8 +9,10 @@ import org.example.performance.service.MetricConfigService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -26,13 +28,22 @@ public class AlertRuleServiceImpl extends ServiceImpl<AlertRuleMapper, AlertRule
     private MetricConfigService metricConfigService;
 
     public Map<String, AlertRule> getRuleMap() {
-        Map<Integer, AlertRule> id2ruleMap = list().stream().collect(Collectors.toMap(AlertRule::getId, Function.identity()));
-        Map<Integer, String> id2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.Origin.CONTAINER)
-                .stream().collect(Collectors.toMap(MetricConfig::getId, MetricConfig::getType));
+        // 指标id对应的rule 的map
+        Map<Integer, AlertRule> id2ruleMap = list().stream().collect(Collectors.toMap(AlertRule::getMetricId, Function.identity()));
+        Map<Integer, String> id2NameMap = metricConfigService.lambdaQuery().in(MetricConfig::getId, id2ruleMap.keySet()).list()
+                .stream().collect(Collectors.toMap(MetricConfig::getId, MetricConfig::getMetricName));
         Map<String, AlertRule> ruleMap = new HashMap<>();
-        id2ruleMap.forEach((id, alert) -> ruleMap.put(id2TypeMap.get(id), alert));
+        id2ruleMap.forEach((id, alert) -> ruleMap.put(id2NameMap.get(id), alert));
         return ruleMap;
     }
+
+    public BigDecimal getRuleValue(AlertRule alertRule, Function<AlertRule, Integer> valueExtractor) {
+        return Optional.ofNullable(alertRule)
+                .map(valueExtractor)
+                .map(BigDecimal::valueOf)
+                .orElse(null);
+    }
+
 }
 
 

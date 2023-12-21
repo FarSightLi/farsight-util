@@ -61,14 +61,8 @@ public class DiskInfo implements Serializable {
     private LocalDateTime updateTime;
 
     /**
-     * 关联的主机id
-     */
-    private Long hostId;
-
-    /**
      * 关联的主机ip
      */
-    @TableField(exist = false)
     private String hostIp;
 
     @TableField(exist = false)

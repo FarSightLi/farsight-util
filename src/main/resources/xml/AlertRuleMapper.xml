@@ -8,7 +8,7 @@
         <id property="id" column="id" jdbcType="INTEGER"/>
         <result property="errorValue" column="error_value" jdbcType="DECIMAL"/>
         <result property="warningValue" column="warning_value" jdbcType="DECIMAL"/>
-        <result property="configId" column="config_id" jdbcType="INTEGER"/>
+        <result property="metricId" column="metric_id" jdbcType="INTEGER"/>
     </resultMap>
 
     <sql id="Base_Column_List">

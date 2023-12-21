@@ -8,7 +8,7 @@
         <id property="id" column="id" jdbcType="INTEGER"/>
         <result property="containerName" column="container_name" jdbcType="VARCHAR"/>
         <result property="containerId" column="container_id" jdbcType="VARCHAR"/>
-        <result property="hostId" column="host_id" jdbcType="INTEGER"/>
+        <result property="hostIp" column="host_ip" jdbcType="INTEGER"/>
         <result property="imageSize" column="image_size" jdbcType="DECIMAL"/>
         <result property="cpus" column="cpus" jdbcType="DECIMAL"/>
         <result property="createTime" column="create_time" jdbcType="TIMESTAMP"/>
@@ -25,7 +25,7 @@
         disk_size
     </sql>
     <insert id="updateOrInsertBatch">
-        insert into container_info(id,container_name, container_id, host_id, image_size, cpus, create_time, version,
+        insert into container_info(id,container_name, container_id, host_ip, image_size, cpus, create_time, version,
         mem_size, disk_size, update_time)
         values
         <foreach collection="containerInfoCollection" item="item" separator=",">
@@ -33,7 +33,7 @@
             #{item.id},
             #{item.containerName, jdbcType=VARCHAR},
             #{item.containerId, jdbcType=VARCHAR},
-            #{item.hostId, jdbcType=NUMERIC},
+            #{item.hostIp, jdbcType=NUMERIC},
             #{item.imageSize, jdbcType=DECIMAL},
             #{item.cpus, jdbcType=DECIMAL},
             #{item.createTime},
@@ -46,7 +46,7 @@
         ON DUPLICATE KEY UPDATE
         container_name = CASE WHEN VALUES(container_name) IS NOT NULL THEN VALUES(container_name) ELSE container_name
         END,
-        host_id = CASE WHEN VALUES(host_id) IS NOT NULL THEN VALUES(host_id) ELSE host_id END,
+        host_ip = CASE WHEN VALUES(host_ip) IS NOT NULL THEN VALUES(host_ip) ELSE host_ip END,
         image_size = CASE WHEN VALUES(image_size) IS NOT NULL THEN VALUES(image_size) ELSE image_size END,
         cpus = CASE WHEN VALUES(cpus) IS NOT NULL THEN VALUES(cpus) ELSE cpus END,
         create_time = CASE WHEN VALUES(create_time) IS NOT NULL THEN VALUES(create_time) ELSE create_time END,

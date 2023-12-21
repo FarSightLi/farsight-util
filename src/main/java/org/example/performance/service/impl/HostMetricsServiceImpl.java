@@ -37,6 +37,7 @@ public class HostMetricsServiceImpl implements HostMetricsService {
     private AlertRuleService alertRuleService;
     @Resource
     private MetricRecordService metricRecordService;
+
     @Override
     public List<HostMetricsVO> getMetricsVO(String ip, LocalDateTime startTime, LocalDateTime endTime) {
         List<String> ipList = new ArrayList<>();
@@ -67,6 +68,7 @@ public class HostMetricsServiceImpl implements HostMetricsService {
             String desc;
             HostMetricsBO.Type fieldType;
         }
+        // TODO 待优化
         List<Data> dataList = new ArrayList<>();
         dataList.add(new Data("host.mem.sum", "mem", "主机内存使用量(MB)", HostMetricsBO.Type.MEM));
         dataList.add(new Data("host.network.bytin", "bytin", "主机网络流量IN(MB/s)", HostMetricsBO.Type.BYTIN));
@@ -78,10 +80,12 @@ public class HostMetricsServiceImpl implements HostMetricsService {
         dataList.add(new Data("host.disk.io.rate", "io", "主机磁盘IO使用率(/data，%)", HostMetricsBO.Type.MEM_RATE));
         dataList.add(new Data("host.disk.inode.rate", "inode", "主机磁盘INODE使用率(/data，%)", HostMetricsBO.Type.INODE));
         dataList.add(new Data("host.network.bytout", "bytout", "主机网络流量OUT(MB/s)", HostMetricsBO.Type.BYOUT));
-        map.forEach((time, info) -> dataList.forEach(data -> voList.add(createHostMetricsVO(data.desc,
-                data.name, data.type, info.getValueByType(data.fieldType), info.getUpdateTime(),
-                alertMap.getOrDefault(data.name, new AlertRule()).getWarningValue(),
-                alertMap.getOrDefault(data.name, new AlertRule()).getErrorValue()))));
+        map.forEach((time, info) -> dataList.forEach(data -> voList.add(
+                createHostMetricsVO(data.desc, data.name,
+                        data.type, info.getValueByType(data.fieldType), info.getUpdateTime(),
+                        alertRuleService.getRuleValue(alertMap.get(data.name), AlertRule::getWarningValue),
+                        alertRuleService.getRuleValue(alertMap.get(data.name), AlertRule::getErrorValue)))));
+
         return voList;
     }
 
@@ -95,9 +99,12 @@ public class HostMetricsServiceImpl implements HostMetricsService {
         vo.setType(type);
         vo.setValue(value);
         vo.setMonitorTime(monitorTime);
-        vo.setTriggerWarnLimit(warnLimit);
-        vo.setTriggerErrorLimit(errorLimit);
+        // 即该项指标有预警规则
         if (warnLimit != null && errorLimit != null) {
+            warnLimit = warnLimit.setScale(1);
+            errorLimit = errorLimit.setScale(1);
+            vo.setTriggerWarnLimit(warnLimit);
+            vo.setTriggerErrorLimit(errorLimit);
             if (value.compareTo(errorLimit) > 0) {
                 vo.setState(3);
             } else if (value.compareTo(warnLimit) > 0) {

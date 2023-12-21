@@ -17,24 +17,24 @@
     <sql id="Base_Column_List">
         id,
         df_name,df_size,
-        disk_used_size,inode_used_rate,io_rate,update_time
+        disk_used_size,inode_used_rate,io_rate,update_time,host_ip
     </sql>
     <insert id="insertBatch">
         insert into disk_info(df_name,df_size,
-        disk_used_size,inode_used_rate,io_rate,update_time,host_id)
+        disk_used_size,inode_used_rate,io_rate,update_time,host_ip)
         values
         <foreach collection="diskInfoList" item="item" separator=",">
             (#{item.dfName,jdbcType=VARCHAR},#{item.dfSize,jdbcType=DECIMAL},
             #{item.diskUsedSize,jdbcType=DECIMAL},#{item.inodeUsedRate,jdbcType=DECIMAL},#{item.ioRate,jdbcType=DECIMAL},
-            #{item.updateTime},#{item.hostId,jdbcType=NUMERIC})
+            #{item.updateTime},#{item.hostIp,jdbcType=NUMERIC})
         </foreach>
     </insert>
-    <select id="selectNewestByHostId" resultMap="BaseResultMap">
+    <select id="selectNewestByHostIp" resultMap="BaseResultMap">
         SELECT
         <include refid="Base_Column_List"/>
-        FROM disk_info WHERE host_id = #{hostId,jdbcType=NUMERIC}
+        FROM disk_info WHERE host_ip = #{hostIp,jdbcType=NUMERIC}
         and
-        update_time =(SELECT max(update_time) FROM disk_info WHERE host_id =
-        #{hostId,jdbcType=NUMERIC}) ;
+        update_time =(SELECT max(update_time) FROM disk_info WHERE host_ip =
+        #{hostIp,jdbcType=NUMERIC}) ;
     </select>
 </mapper>

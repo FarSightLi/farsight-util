@@ -144,35 +144,37 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
 
     /**
      * 传入一个字段type来动态获得字段值
+     * <p>
+     * 如果不支持该字段，将会返回null
      *
      * @param type 字段类型
      * @return 返回字段对应的值
      */
     public BigDecimal getValueByType(String type) {
         switch (type) {
-            case "mem":
+            case "host.mem.sum":
                 return mem;
-            case "bytin":
+            case "host.network.bytin":
                 return byteIn;
-            case "load":
+            case "host.load.avg":
                 return hostLoad;
-            case "cpu":
+            case "host.cpu.rate":
                 return cpu;
-            case "disk":
+            case "host.disk.rate":
                 return disk;
-            case "tcp":
+            case "host.network.tcp":
                 return tcp;
-            case "mem_rate":
+            case "host.mem.rate":
                 return memRate;
-            case "io":
+            case "host.disk.io.rate":
                 return io;
-            case "inode":
+            case "host.disk.inode.rate":
                 return inode;
-            case "bytout":
+            case "host.network.bytout":
                 return byteOut;
             default:
                 log.error("不支持的字段类型{}", type);
-                throw new BusinessException(CodeMsg.SYSTEM_ERROR);
+                return null;
         }
     }
 
@@ -184,39 +186,38 @@ public class HostMetricsBO implements Serializable, HasUpdateTime {
      */
     public void setValue(String type, BigDecimal value) {
         switch (type) {
-            case "mem":
+            case "host.mem.sum":
                 mem = value;
                 break;
-            case "bytin":
+            case "host.network.bytin":
                 byteIn = value;
                 break;
-            case "load":
+            case "host.load.avg":
                 hostLoad = value;
                 break;
-            case "cpu":
+            case "host.cpu.rate":
                 cpu = value;
                 break;
-            case "disk":
+            case "host.disk.rate":
                 disk = value;
                 break;
-            case "tcp":
+            case "host.network.tcp":
                 tcp = value;
                 break;
-            case "mem_rate":
+            case "host.mem.rate":
                 memRate = value;
                 break;
-            case "io":
+            case "host.disk.io.rate":
                 io = value;
                 break;
-            case "inode":
+            case "host.disk.inode.rate":
                 inode = value;
                 break;
-            case "bytout":
+            case "host.network.bytout":
                 byteOut = value;
                 break;
             default:
                 log.error("不支持的字段类型{}", type);
-                throw new BusinessException(CodeMsg.SYSTEM_ERROR);
         }
     }
 }

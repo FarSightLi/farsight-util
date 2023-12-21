@@ -7,13 +7,12 @@
     <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.MetricConfig">
         <id property="id" column="id" jdbcType="INTEGER"/>
         <result property="metricName" column="metric_name" jdbcType="VARCHAR"/>
-        <result property="type" column="type" jdbcType="CHAR"/>
+        <result property="type" column="type" jdbcType="INTEGER"/>
         <result property="metricDesc" column="metric_desc" jdbcType="VARCHAR"/>
-        <result property="origin" column="origin" jdbcType="TINYINT"/>
     </resultMap>
 
     <sql id="Base_Column_List">
-        id,metric_name,type,
-        metric_desc,origin
+        id,metric_name,metricType,
+        metric_desc,metricType
     </sql>
 </mapper>

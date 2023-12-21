@@ -87,8 +87,7 @@ public class HostInfoServiceImpl extends ServiceImpl<HostInfoMapper, HostInfo>
     public HostInfoVO getHostInfo(String ip) {
         HostInfoVO hostInfoVO = new HostInfoVO();
         HostInfo hostInfo = hostInfoMapper.getOneByIp(ip);
-        Long hostId = hostInfo.getId();
-        List<DiskInfo> diskInfoList = diskInfoMapper.selectNewestByHostId(hostId);
+        List<DiskInfo> diskInfoList = diskInfoMapper.selectNewestByHostIp(ip);
         BeanUtils.copyProperties(hostInfo, hostInfoVO);
         hostInfoVO.setDiskInfoVO(getDiskInfoVO(diskInfoList));
         return hostInfoVO;

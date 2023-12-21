@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
@@ -29,7 +30,7 @@ public class MetricRecord implements Serializable {
     /**
      * 指标具体值
      */
-    private String metricValue;
+    private BigDecimal metricValue;
 
     /**
      * 指标来源维度
@@ -37,9 +38,9 @@ public class MetricRecord implements Serializable {
     private Long metricOrigin;
 
     /**
-     * 更新时间
+     * 监控时间
      */
-    private LocalDateTime updateTime;
+    private LocalDateTime monitorTime;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

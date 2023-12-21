@@ -36,14 +36,8 @@ public class ContainerInfo implements Serializable {
     private String containerId;
 
     /**
-     * 主机ID
-     */
-    private Long hostId;
-
-    /**
      * 主机Ip
      */
-    @TableField(exist = false)
     private String hostIp;
 
     /**

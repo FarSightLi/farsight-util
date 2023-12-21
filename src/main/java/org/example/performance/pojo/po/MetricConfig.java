@@ -16,7 +16,7 @@ import java.io.Serializable;
 @TableName(value = "metric_config")
 @Data
 public class MetricConfig implements Serializable {
-    public enum Origin {
+    public enum Type {
         HOST(1),
         CONTAINER(2),
         SERVICE(3),
@@ -24,7 +24,7 @@ public class MetricConfig implements Serializable {
 
         private final Integer value;
 
-        Origin(Integer value) {
+        Type(Integer value) {
             this.value = value;
         }
 
@@ -49,19 +49,14 @@ public class MetricConfig implements Serializable {
     private String metricName;
 
     /**
-     * 指标类型
+     * 指标所属环境 (1主机 2容器 3服务 4集群)
      */
-    private String type;
+    private Integer type;
 
     /**
      * 指标中文描述
      */
     private String metricDesc;
-
-    /**
-     * 指标所属环境 (1主机 2容器 3服务 4集群)
-     */
-    private Integer origin;
 
     @TableField(exist = false)
     private static final long serialVersionUID = 1L;

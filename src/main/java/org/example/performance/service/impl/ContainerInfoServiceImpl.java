@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -42,33 +42,19 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
 
     @Override
     public Map<String, List<String>> getContainerId(List<String> ipList) {
-        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(ipList);
-        Map<Long, List<String>> containerMap = getBaseMapper().selectList(new LambdaQueryWrapper<ContainerInfo>()
-                        .in(ContainerInfo::getHostId, ip2IdMap.values())
-                        .select(ContainerInfo::getContainerId, ContainerInfo::getHostId))
-                .stream().collect(Collectors.groupingBy(ContainerInfo::getHostId,
-                        Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList())));
-
-        // 以 ip 为 key 的结果,value为 ContainerIdList 的Map
-        Map<String, List<String>> containerIdMap = new HashMap<>();
-        containerMap.forEach((hostId, containerInfoList) -> {
-            // 通过 hostId 在 ip2IdMap 中找到对应的 ip
-            ip2IdMap.entrySet().stream()
-                    .filter(e -> e.getValue().equals(hostId))
-                    .map(Map.Entry::getKey)
-                    .findFirst().ifPresent(ip -> containerIdMap.put(ip, containerInfoList));
-        });
-        return containerIdMap;
+        List<ContainerInfo> list = new ArrayList<>();
+        if (ObjectUtil.isNotEmpty(ipList)) {
+            list = lambdaQuery().in(ContainerInfo::getHostIp, ipList).select(ContainerInfo::getContainerId, ContainerInfo::getHostIp).list();
+        }
+        return list.stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList())));
     }
 
     @Override
     @Transactional
     public void updateOrInsertContainer(List<ContainerInfo> containerInfoList) {
-        Map<String, Long> ip2IdMap = hostInfoService.getIp2IdMap(containerInfoList.stream().map(ContainerInfo::getHostIp).collect(Collectors.toSet()));
         LocalDateTime now = LocalDateTime.now();
         containerInfoList.forEach(containerInfo -> {
             containerInfo.setId(IdUtil.getSnowflakeNextId());
-            containerInfo.setHostId(ip2IdMap.get(containerInfo.getHostIp()));
             containerInfo.setUpdateTime(now);
         });
         baseMapper.updateOrInsertBatch(containerInfoList);

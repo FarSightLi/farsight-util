@@ -9,7 +9,7 @@
         <result property="metricId" column="metric_id" jdbcType="INTEGER"/>
         <result property="metricValue" column="metric_value" jdbcType="CHAR"/>
         <result property="metricOrigin" column="metric_origin" jdbcType="BIGINT"/>
-        <result property="updateTime" column="update_time" jdbcType="TIMESTAMP"/>
+        <result property="monitorTime" column="monitor_time" jdbcType="TIMESTAMP"/>
     </resultMap>
 
     <sql id="Base_Column_List">
@@ -18,11 +18,11 @@
     </sql>
     <insert id="insertBatch">
         insert into metric_record(metric_id,metric_value,
-        metric_origin,update_time)
+        metric_origin,monitor_time)
         values
         <foreach collection="metricRecordCollection" item="item" separator=",">
             (#{item.metricId,jdbcType=NUMERIC},#{item.metricValue,jdbcType=VARCHAR},
-            #{item.metricOrigin,jdbcType=NUMERIC},#{item.updateTime})
+            #{item.metricOrigin,jdbcType=NUMERIC},#{item.monitorTime})
         </foreach>
     </insert>
 </mapper>

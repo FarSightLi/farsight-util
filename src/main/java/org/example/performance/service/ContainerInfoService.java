@@ -13,10 +13,10 @@ import java.util.Map;
  */
 public interface ContainerInfoService extends IService<ContainerInfo> {
     /**
-     * 获得Ip对应的容器的列表idList
+     * 获得Ip对应的容器id的列表
      *
      * @param ipList ip的List
-     * @return Ip对应的容器的列表
+     * @return Ip对应的容器id的列表
      */
     Map<String, List<String>> getContainerId(List<String> ipList);
 
