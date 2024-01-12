@@ -64,15 +64,15 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
     @Override
     public void insertContainerBatch(List<ContainerMetricsBO> containerMetricsBOList) {
         // type 和 id 的map
-        Map<String, Integer> metricType2IdMap = metricConfigService.getMetricName2IdMapByType(MetricConfig.OriginType.CONTAINER);
+        Map<String, Integer> metricName2IdMap = metricConfigService.getMetricName2IdMapByType(MetricConfig.OriginType.CONTAINER);
         // 每个bo会创建出5个Record
         List<MetricRecord> metricRecordList = new ArrayList<>(containerMetricsBOList.size() * 5);
         LocalDateTime now = LocalDateTime.now();
-        containerMetricsBOList.forEach(bo -> metricType2IdMap.forEach((type, id) -> {
+        containerMetricsBOList.forEach(bo -> metricName2IdMap.forEach((type, id) -> {
             MetricRecord metricRecord = new MetricRecord();
             metricRecord.setMetricId(id);
             metricRecord.setMetricOrigin(containerInfoService.getCodeByContainerId(bo.getContainerId()));
-            if ("state".equals(type)) {
+            if ("container.state".equals(type)) {
                 metricRecord.setMetricValue(BigDecimal.valueOf(bo.getState()));
             } else {
                 // 其他小数数据可统一获得
@@ -126,7 +126,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
         Map<Long, Map<LocalDateTime, List<MetricRecord>>> id2TimeRecordMap = id2RecordMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey,
                 entry -> entry.getValue().stream().collect(Collectors.groupingBy(MetricRecord::getMonitorTime))));
         // 指标id 对应 name 的map
-        Map<Integer, String> metricId2TypeMap = metricConfigService.getMetricConfigList(MetricConfig.OriginType.CONTAINER)
+        Map<Integer, String> metricId2NameMap = metricConfigService.getMetricConfigList(MetricConfig.OriginType.CONTAINER)
                 .stream().collect(Collectors.toMap(MetricConfig::getId, MetricConfig::getMetricName));
         List<ContainerMetricsBO> boList = new ArrayList<>(id2TimeRecordMap.size());
         id2TimeRecordMap.forEach((code, map) -> map.forEach((time, recordList) -> {
@@ -134,7 +134,7 @@ public class MetricRecordServiceImpl extends ServiceImpl<MetricRecordMapper, Met
             bo.setCode(code);
             bo.setUpdateTime(time);
             recordList.forEach(r -> {
-                String name = metricId2TypeMap.get(r.getMetricId());
+                String name = metricId2NameMap.get(r.getMetricId());
                 if ("container.state".equals(name)) {
                     bo.setState(r.getMetricValue().intValue());
                 } else {

@@ -53,6 +53,7 @@ public class ContainerInfoServiceImpl extends ServiceImpl<ContainerInfoMapper, C
     @Override
     @Transactional
     public void updateOrInsertContainer(List<ContainerInfo> containerInfoList) {
+        // TODO 更新已删除的容器
         LocalDateTime now = LocalDateTime.now();
         containerInfoList.forEach(containerInfo -> {
             containerInfo.setId(IdUtil.getSnowflakeNextId());

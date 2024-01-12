@@ -39,6 +39,7 @@
             #{item.updateTime}
             )
         </foreach>
+        -- TODO 避免特殊写法
         ON DUPLICATE KEY UPDATE
         cpu_arch = CASE WHEN VALUES(cpu_arch) IS NOT NULL THEN VALUES(cpu_arch) ELSE cpu_arch END,
         cpu_cores = CASE WHEN VALUES(cpu_cores) IS NOT NULL THEN VALUES(cpu_cores) ELSE cpu_cores END,

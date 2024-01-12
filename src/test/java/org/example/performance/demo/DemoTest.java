@@ -15,7 +15,6 @@ import org.w3c.dom.NodeList;
 
 import javax.annotation.Resource;
 import javax.xml.xpath.XPathConstants;
-import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -39,14 +38,6 @@ public class DemoTest {
     @Test
     public void file() {
         FileWatcher fileWatcher = new FileWatcher();
-    }
-
-    @Test
-    public void test1() {
-        BigDecimal bigDecimal = BigDecimal.valueOf(0.00);
-        bigDecimal.add(BigDecimal.valueOf(1.74));
-        System.out.println(bigDecimal);
-        System.out.println(bigDecimal.add(BigDecimal.valueOf(1.74)));
     }
 
     @Test

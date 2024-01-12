@@ -40,6 +40,8 @@ public class MetricsScheduledTask {
     private RedisTemplate<String, Object> redisTemplate;
     @Resource
     private MetricRecordService metricRecordService;
+    @Resource
+    private JobLockService jobLockService;
 
     /**
      * ip对应容器map的redis的key
@@ -57,30 +59,37 @@ public class MetricsScheduledTask {
      */
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getSysInfoTask() {
-        List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
-        List<HostInfo> hostInfoList = Collections.synchronizedList(new ArrayList<>());
+        String jobName = "sysInfo";
+        boolean lock = jobLockService.getLock(jobName, 10);
+        if (lock) {
+            List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
+            List<HostInfo> hostInfoList = Collections.synchronizedList(new ArrayList<>());
 
-        // 主机信息采集
-        CacheInfo.getIpList().forEach(ip -> {
-                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                        HostInfo hostInfo = infoService.getSysInfo(SessionConfig.getSession(ip), ip);
-                        hostInfoList.add(hostInfo);
-                    }, ThreadPoolConfig.getSys());
-                    sysFutures.add(future);
-                }
-        );
-        sysFutures.forEach(CompletableFuture::join);
-        log.info("主机信息:" + hostInfoList);
-        // 保存主机信息
-        hostInfoService.updateOrInsertBatch(hostInfoList);
+            // 主机信息采集
+            CacheInfo.getIpList().forEach(ip -> {
+                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                            HostInfo hostInfo = infoService.getSysInfo(SessionConfig.getSession(ip), ip);
+                            hostInfoList.add(hostInfo);
+                        }, ThreadPoolConfig.getSys());
+                        sysFutures.add(future);
+                    }
+            );
+            sysFutures.forEach(CompletableFuture::join);
+            log.info("主机信息:" + hostInfoList);
+            // 保存主机信息
+            hostInfoService.updateOrInsertBatch(hostInfoList);
 
-        // 保存容器信息
-        List<ContainerInfo> containerList = getContainerList(hostInfoList);
-        containerInfoService.updateOrInsertContainer(containerList);
-        // 保存ip和容器id对应关系到缓存
-        updateCache(containerList
-                .stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList()))));
-        log.info("所有主机采集完毕");
+            // 保存容器信息
+            List<ContainerInfo> containerList = getContainerList(hostInfoList);
+            containerInfoService.updateOrInsertContainer(containerList);
+            // 保存ip和容器id对应关系到缓存
+            updateCache(containerList
+                    .stream().collect(Collectors.groupingBy(ContainerInfo::getHostIp, Collectors.mapping(ContainerInfo::getContainerId, Collectors.toList()))));
+            log.info("所有主机采集完毕");
+        }
+        if (lock) {
+            jobLockService.releaseLock(jobName);
+        }
     }
 
     /**
@@ -88,20 +97,27 @@ public class MetricsScheduledTask {
      */
     @Scheduled(fixedRate = 10 * 60 * 1000) //十分钟
     public void getContainerInfoTask() {
-        Map<String, List<String>> containerMap = getContainerMap();
-        List<ContainerInfo> containerInfoList = Collections.synchronizedList(new ArrayList<>());
-        // 容器信息采集
-        List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
-        containerMap.forEach((ip, idList) -> idList.forEach(id -> {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                containerInfoList.add(infoService.getContainerInfo(SessionConfig.getSession(ip), id, ip));
-            }, ThreadPoolConfig.getContainer());
-            containerFutures.add(future);
-        }));
-        containerFutures.forEach(CompletableFuture::join);
-        log.info("容器基础信息:" + containerInfoList);
-        containerInfoService.updateOrInsertContainer(containerInfoList);
-        log.info("所有容器基础信息采集完毕");
+        String jobName = "ContainerInfo";
+        boolean lock = jobLockService.getLock(jobName, 10);
+        if (lock) {
+            Map<String, List<String>> containerMap = getContainerMap();
+            List<ContainerInfo> containerInfoList = Collections.synchronizedList(new ArrayList<>());
+            // 容器信息采集
+            List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
+            containerMap.forEach((ip, idList) -> idList.forEach(id -> {
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                    containerInfoList.add(infoService.getContainerInfo(SessionConfig.getSession(ip), id, ip));
+                }, ThreadPoolConfig.getContainer());
+                containerFutures.add(future);
+            }));
+            containerFutures.forEach(CompletableFuture::join);
+            log.info("容器基础信息:" + containerInfoList);
+            containerInfoService.updateOrInsertContainer(containerInfoList);
+            log.info("所有容器基础信息采集完毕");
+        }
+        if (lock) {
+            jobLockService.releaseLock(jobName);
+        }
     }
 
     /**
@@ -109,24 +125,29 @@ public class MetricsScheduledTask {
      */
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getSysIndexTask() {
-        List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
-        List<HostMetricsBO> hostMetricsBOList = Collections.synchronizedList(new ArrayList<>());
-        List<DiskInfo> diskInfoList = Collections.synchronizedList(new ArrayList<>());
-        // 主机性能采集
-        CacheInfo.getIpList().forEach(ip -> {
-                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                        HostMetricsBO hostMetricsBO = infoService.getSysIndex(SessionConfig.getSession(ip), ip);
-                        hostMetricsBOList.add(hostMetricsBO);
-                        diskInfoList.addAll(hostMetricsBO.getDiskInfoList());
-                    }, ThreadPoolConfig.getSys());
-                    sysFutures.add(future);
-                }
-        );
-        sysFutures.forEach(CompletableFuture::join);
-        log.info("主机性能指标:" + hostMetricsBOList);
-        diskInfoService.saveDiskInfo(diskInfoList);
-        metricRecordService.insertHostBatch(hostMetricsBOList);
-        log.info("所有主机性能采集完毕");
+        String jobName = "HostMetric";
+        boolean lock = jobLockService.getLock(jobName, 1);
+        if (lock) {
+            List<CompletableFuture<Void>> sysFutures = new ArrayList<>();
+            List<HostMetricsBO> hostMetricsBOList = Collections.synchronizedList(new ArrayList<>());
+            List<DiskInfo> diskInfoList = Collections.synchronizedList(new ArrayList<>());
+            // 主机性能采集
+            CacheInfo.getIpList().forEach(ip -> {
+                        CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                            HostMetricsBO hostMetricsBO = infoService.getSysIndex(SessionConfig.getSession(ip), ip);
+                            hostMetricsBOList.add(hostMetricsBO);
+                            diskInfoList.addAll(hostMetricsBO.getDiskInfoList());
+                        }, ThreadPoolConfig.getSys());
+                        sysFutures.add(future);
+                    }
+            );
+            sysFutures.forEach(CompletableFuture::join);
+            log.info("主机性能指标:" + hostMetricsBOList);
+            diskInfoService.saveDiskInfo(diskInfoList);
+            metricRecordService.insertHostBatch(hostMetricsBOList);
+            log.info("所有主机性能采集完毕");
+            jobLockService.releaseLock(jobName);
+        }
     }
 
     /**
@@ -134,20 +155,23 @@ public class MetricsScheduledTask {
      */
     @Scheduled(fixedRate = 60 * 1000) //每分钟
     public void getContainerIndexInfoTask() {
-        Map<String, List<String>> containerMap = getContainerMap();
-        List<ContainerMetricsBO> containerMetricsBOList = Collections.synchronizedList(new ArrayList<>());
-        // 容器信息采集
-        List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
-        containerMap.forEach((ip, idList) -> idList.forEach(id -> {
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
-                containerMetricsBOList.add(infoService.getContainerIndexInfo(SessionConfig.getSession(ip), id, ip));
-            }, ThreadPoolConfig.getContainer());
-            containerFutures.add(future);
-        }));
-        containerFutures.forEach(CompletableFuture::join);
-        log.info("容器性能指标:" + containerMetricsBOList);
-        metricRecordService.insertContainerBatch(containerMetricsBOList);
-        log.info("所有容器性能指标采集完毕");
+        String jobName = "ContainerMetric";
+        boolean lock = jobLockService.getLock(jobName, 1);
+        if (lock) {
+            Map<String, List<String>> containerMap = getContainerMap();
+            List<ContainerMetricsBO> containerMetricsBOList = Collections.synchronizedList(new ArrayList<>());
+            // 容器信息采集
+            List<CompletableFuture<Void>> containerFutures = new ArrayList<>();
+            containerMap.forEach((ip, idList) -> idList.forEach(id -> {
+                CompletableFuture<Void> future = CompletableFuture.runAsync(() -> containerMetricsBOList.add(infoService.getContainerIndexInfo(SessionConfig.getSession(ip), id, ip)), ThreadPoolConfig.getContainer());
+                containerFutures.add(future);
+            }));
+            containerFutures.forEach(CompletableFuture::join);
+            log.info("容器性能指标:" + containerMetricsBOList);
+            metricRecordService.insertContainerBatch(containerMetricsBOList);
+            log.info("所有容器性能指标采集完毕");
+            jobLockService.releaseLock(jobName);
+        }
     }
 
     private Map<String, List<String>> getContainerMap() {

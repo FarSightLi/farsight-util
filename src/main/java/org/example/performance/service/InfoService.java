@@ -17,10 +17,7 @@ import org.example.performance.pojo.po.HostInfo;
 import org.example.performance.util.DataUtil;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -30,13 +27,23 @@ import static org.example.performance.util.DataUtil.*;
 @Slf4j
 public class InfoService {
 
+    private static final Map<String, String> SYS_VERSION_COMMAND;
+
+    static {
+        SYS_VERSION_COMMAND = new HashMap<>();
+        SYS_VERSION_COMMAND.put("suse", "cat /etc/SuSE-release");
+        SYS_VERSION_COMMAND.put("centos", "cat /etc/redhat-release");
+        SYS_VERSION_COMMAND.put("kylin", "cat /etc/kylin-release");
+        SYS_VERSION_COMMAND.put("ky10", "cat /etc/kylin-release");
+    }
+
     public HostInfo getSysInfo(Session session, String ip) {
         HostInfo hostInfo = new HostInfo();
         hostInfo.setIp(ip);
         hostInfo.setHostName(execCmd(session, "hostname"));
         hostInfo.setCpuCores(Integer.valueOf(execCmd(session, "lscpu | awk '/^CPU\\(s\\):/ {print $2}'")));
         hostInfo.setCpuArch(execCmd(session, "lscpu | awk '/^Architecture:/ {print $2}'"));
-        hostInfo.setSysVersion(execCmd(session, "cat /etc/redhat-release"));
+        hostInfo.setSysVersion(getHostVersion(session));
         String memByteSize = execCmd(session, "tsar --mem -C -s total | awk -F= '{print $2}'");
         hostInfo.setMemSize(parseDataSize(memByteSize));
         hostInfo.setKernelRelease(execCmd(session, "uname -r"));
@@ -152,11 +159,38 @@ public class InfoService {
 
 
     private String execCmd(Session session, String cmd) {
-        if (session.isConnected()) {
-            return JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8).trim();
+        String result = JschUtil.exec(session, cmd, CharsetUtil.CHARSET_UTF_8).trim();
+        if (result.isEmpty()) {
+            log.error("主机 {} 的命令 {} 执行失败", session.getHost(), cmd);
+            return null;
         } else {
-            throw new BusinessException(CodeMsg.SYSTEM_ERROR, "jsch session已经关闭");
+            return result;
         }
+    }
+
+    private String getHostVersion(Session session) {
+        String version = execCmd(session, "cat /etc/system-release");
+        if (ObjectUtil.isNotEmpty(version)) {
+            return version;
+        } else {
+            String finalVersion = version;
+            String command = SYS_VERSION_COMMAND.entrySet()
+                    .stream()
+                    .filter(entry -> finalVersion.contains(entry.getKey()))
+                    .findFirst()
+                    .map(Map.Entry::getValue)
+                    .orElse(null);
+
+            if (command != null) {
+                version = execCmd(session, command);
+                return version;
+            } else {
+                log.warn("获取系统版本时失败");
+                return null;
+            }
+
+        }
+
     }
 
     private Integer getState(String statusStr, String containerId, String ip) {
