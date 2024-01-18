@@ -1,8 +1,7 @@
 const CHUNK_SIZE = 1024 * 1024 * 20; // 20MB 分片大小
-let currentChunk = 0; // 将 currentChunk 移到外部作用域
 
-function uploadFile() {
-    const fileInput = document.getElementById('fileInput');
+function uploadFile1() {
+    const fileInput = document.getElementById('fileInput1');
     const file = fileInput.files[0];
 
     if (!file) {
@@ -29,7 +28,115 @@ function uploadFile() {
                 formData.append('md5', md5);
 
                 const xhr = new XMLHttpRequest();
-                xhr.open('POST', 'http://localhost:8081/upload', true);
+                xhr.open('POST', 'http://localhost:8081/upload1', true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        currentChunk++;
+                        if (currentChunk < totalChunks) {
+                            uploadNextChunk();
+                        } else {
+                            alert('上传完成');
+                        }
+                    } else {
+                        alert('上传失败');
+                    }
+                };
+
+                xhr.send(formData);
+            })
+            .catch(error => {
+                // 处理错误
+                console.error(error.message);
+                alert('获取MD5失败');
+            });
+    }
+
+    uploadNextChunk();
+}
+
+function uploadFile2() {
+    const fileInput = document.getElementById('fileInput2');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('请选择一个文件');
+        return;
+    }
+
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    let currentChunk = 0;
+
+    function uploadNextChunk() {
+        const start = currentChunk * CHUNK_SIZE;
+        const end = Math.min((currentChunk + 1) * CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+
+        // 获取 MD5
+        getMd(chunk)
+            .then(md5 => {
+                const formData = new FormData();
+                formData.append('file', chunk);
+                formData.append('currentChunk', currentChunk);
+                formData.append('totalChunks', totalChunks);
+                formData.append('originalFilename', file.name);
+                formData.append('md5', md5);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:8081/upload2', true);
+                xhr.onload = function () {
+                    if (xhr.status === 200) {
+                        currentChunk++;
+                        if (currentChunk < totalChunks) {
+                            uploadNextChunk();
+                        } else {
+                            alert('上传完成');
+                        }
+                    } else {
+                        alert('上传失败');
+                    }
+                };
+
+                xhr.send(formData);
+            })
+            .catch(error => {
+                // 处理错误
+                console.error(error.message);
+                alert('获取MD5失败');
+            });
+    }
+
+    uploadNextChunk();
+}
+
+function uploadFile3() {
+    const fileInput = document.getElementById('fileInput3');
+    const file = fileInput.files[0];
+
+    if (!file) {
+        alert('请选择一个文件');
+        return;
+    }
+
+    const totalChunks = Math.ceil(file.size / CHUNK_SIZE);
+    let currentChunk = 0;
+
+    function uploadNextChunk() {
+        const start = currentChunk * CHUNK_SIZE;
+        const end = Math.min((currentChunk + 1) * CHUNK_SIZE, file.size);
+        const chunk = file.slice(start, end);
+
+        // 获取 MD5
+        getMd(chunk)
+            .then(md5 => {
+                const formData = new FormData();
+                formData.append('file', chunk);
+                formData.append('currentChunk', currentChunk);
+                formData.append('totalChunks', totalChunks);
+                formData.append('originalFilename', file.name);
+                formData.append('md5', md5);
+
+                const xhr = new XMLHttpRequest();
+                xhr.open('POST', 'http://localhost:8081/upload3', true);
                 xhr.onload = function () {
                     if (xhr.status === 200) {
                         currentChunk++;
