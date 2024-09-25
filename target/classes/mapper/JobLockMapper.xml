@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.performance.mapper.JobLockMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.JobLock">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="jobName" column="job_name" jdbcType="VARCHAR"/>
+        <result property="expirationTime" column="expiration_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,job_name,expiration_time
+    </sql>
+</mapper>

@@ -1,7 +1,6 @@
 package org.example.performance.controller;
 
 import lombok.extern.slf4j.Slf4j;
-import lombok.var;
 import org.example.performance.component.Result;
 import org.example.performance.component.aop.NotIdentify;
 import org.example.performance.component.exception.BusinessException;

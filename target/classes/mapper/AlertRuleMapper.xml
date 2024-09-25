@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.performance.mapper.AlertRuleMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.AlertRule">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="errorValue" column="error_value" jdbcType="DECIMAL"/>
+        <result property="warningValue" column="warning_value" jdbcType="DECIMAL"/>
+        <result property="metricId" column="metric_id" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,error_value,warning_value,
+        config_id
+    </sql>
+</mapper>

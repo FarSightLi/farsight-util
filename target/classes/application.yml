@@ -1,0 +1,38 @@
+jwt:
+  secret: pKRpxJKnd5Aj0FCZ8g9q7nZO+BVx1pceq/kbv+wvHaGmePjA9CWB6GQIZ+84EK7ErKwnlrKNmHV/WTnoQiFXmA== #JWT加解密使用的密钥
+aes:
+  key: "1234567812345678"
+  iv: "1234567812345678"
+server:
+  port: 8081
+spring:
+  servlet:
+    multipart:
+      max-file-size: 1024MB
+      max-request-size: 1024MB
+  redis:
+    host: 192.168.1.167
+    port: 6379
+  task:
+    scheduling:
+      pool:
+        size: 5
+  jackson:
+    date-format: "yyyy-MM-dd HH:mm:ss"
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+      write-date-timestamps-as-nanoseconds: false
+    deserialization:
+      read-date-timestamps-as-nanoseconds: false
+  datasource:
+    url: jdbc:mysql://192.168.1.167:3316/performance?useSSL=false&useUnicode=true&characterEncoding=UTF-8&serverTimezone=GMT%2B8&nullCatalogMeansCurrent=true
+    username: root
+    password: 123456
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  configuration:
+    map-underscore-to-camel-case: true
+#    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl

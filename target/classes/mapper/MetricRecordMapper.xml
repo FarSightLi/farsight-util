@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.example.performance.mapper.MetricRecordMapper">
+
+    <resultMap id="BaseResultMap" type="org.example.performance.pojo.po.MetricRecord">
+        <id property="id" column="id" jdbcType="INTEGER"/>
+        <result property="metricId" column="metric_id" jdbcType="INTEGER"/>
+        <result property="metricValue" column="metric_value" jdbcType="CHAR"/>
+        <result property="metricOrigin" column="metric_origin" jdbcType="BIGINT"/>
+        <result property="monitorTime" column="monitor_time" jdbcType="TIMESTAMP"/>
+    </resultMap>
+
+    <sql id="Base_Column_List">
+        id,metric_id,metric_value,
+        metric_origin,update_time
+    </sql>
+    <insert id="insertBatch">
+        insert into metric_record(metric_id,metric_value,
+        metric_origin,monitor_time)
+        values
+        <foreach collection="metricRecordCollection" item="item" separator=",">
+            (#{item.metricId,jdbcType=NUMERIC},#{item.metricValue,jdbcType=VARCHAR},
+            #{item.metricOrigin,jdbcType=NUMERIC},#{item.monitorTime})
+        </foreach>
+    </insert>
+</mapper>
